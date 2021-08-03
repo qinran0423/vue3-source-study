@@ -36,8 +36,13 @@ export function parseCssVars(sfc: SFCDescriptor): string[] {
   const vars: string[] = []
   sfc.styles.forEach(style => {
     let match
-    while ((match = cssVarRE.exec(style.content))) {
-      vars.push(match[1] || match[2] || match[3])
+    // ignore v-bind() in comments /* ... */
+    const content = style.content.replace(/\/\*([\s\S]*?)\*\//g, '')
+    while ((match = cssVarRE.exec(content))) {
+      const variable = match[1] || match[2] || match[3]
+      if (!vars.includes(variable)) {
+        vars.push(variable)
+      }
     }
   })
   return vars

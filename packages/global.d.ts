@@ -24,9 +24,7 @@ declare namespace jest {
   }
 }
 
-declare module '*.vue' {
-
-}
+declare module '*.vue' {}
 declare module '*?raw' {
   const content: string
   export default content
@@ -34,4 +32,9 @@ declare module '*?raw' {
 
 declare module 'file-saver' {
   export function saveAs(blob: any, name: any): void
+}
+
+declare module 'stream/web' {
+  const r: typeof ReadableStream
+  export { r as ReadableStream }
 }
