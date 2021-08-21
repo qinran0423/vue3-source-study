@@ -2,11 +2,14 @@
 export { SSRContext } from './render'
 export { renderToString } from './renderToString'
 export {
-  renderToStream,
   renderToSimpleStream,
   renderToNodeStream,
+  pipeToNodeWritable,
   renderToWebStream,
-  SimpleReadable
+  pipeToWebWritable,
+  SimpleReadable,
+  // deprecated
+  renderToStream
 } from './renderToStream'
 
 // internal runtime helpers
@@ -24,6 +27,7 @@ export {
 export { ssrInterpolate } from './helpers/ssrInterpolate'
 export { ssrRenderList } from './helpers/ssrRenderList'
 export { ssrRenderSuspense } from './helpers/ssrRenderSuspense'
+export { includeBooleanAttr as ssrIncludeBooleanAttr } from '@vue/shared'
 
 // v-model helpers
 export {

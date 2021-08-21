@@ -65,6 +65,7 @@ const DEFINE_EXPOSE = 'defineExpose'
 const WITH_DEFAULTS = 'withDefaults'
 
 const $REF = `$ref`
+const $SHALLOW_REF = '$shallowRef'
 const $COMPUTED = `$computed`
 const $FROM_REFS = `$fromRefs`
 const $RAW = `$raw`
@@ -88,8 +89,8 @@ export interface SFCScriptCompileOptions {
    */
   babelParserPlugins?: ParserPlugin[]
   /**
-   * Enable ref: label sugar
-   * https://github.com/vuejs/rfcs/pull/228
+   * Introduce a compiler-based syntax sugar for using refs without `.value`
+   * https://github.com/vuejs/rfcs/discussions/369
    * @default true
    */
   refSugar?: boolean
@@ -200,14 +201,12 @@ export function compileScript(
       let content = script.content
       if (cssVars.length) {
         content = rewriteDefault(content, `__default__`, plugins)
-        if (cssVars.length) {
-          content += genNormalScriptCssVarsCode(
-            cssVars,
-            bindings,
-            scopeId,
-            !!options.isProd
-          )
-        }
+        content += genNormalScriptCssVarsCode(
+          cssVars,
+          bindings,
+          scopeId,
+          !!options.isProd
+        )
         content += `\nexport default __default__`
       }
       return {
@@ -331,10 +330,12 @@ export function compileScript(
     }
 
     let isUsedInTemplate = true
-    if (isTS && sfc.template && !sfc.template.src) {
-      isUsedInTemplate = new RegExp(`\\b${local}\\b`).test(
-        resolveTemplateUsageCheckString(sfc)
-      )
+    if (isTS && sfc.template && !sfc.template.src && !sfc.template.lang) {
+      isUsedInTemplate = new RegExp(
+        // #4274 escape $ since it's a special char in regex
+        // (and is the only regex special char that is valid in identifiers)
+        `[^\\w$_]${local.replace(/\$/g, '\\$')}[^\\w$_]`
+      ).test(resolveTemplateUsageCheckString(sfc))
     }
 
     userImports[local] = {
@@ -529,7 +530,12 @@ export function compileScript(
   }
 
   function isRefSugarCall(callee: string) {
-    return callee === $REF || callee === $COMPUTED || callee === $FROM_REFS
+    return (
+      callee === $REF ||
+      callee === $COMPUTED ||
+      callee === $FROM_REFS ||
+      callee === $SHALLOW_REF
+    )
   }
 
   function processRefSugar(
@@ -548,29 +554,36 @@ export function compileScript(
         decl.init
       )
     } else {
-      warnExperimental(`ref sugar`, 0 /* TODO */)
+      warnExperimental(
+        `ref sugar`,
+        `https://github.com/vuejs/rfcs/discussions/369`
+      )
     }
 
     const callee = (decl.init.callee as Identifier).name
     const start = decl.init.start! + startOffset
-    if (callee === $REF) {
+    if (callee === $REF || callee === $SHALLOW_REF) {
       if (statement.kind !== 'let') {
-        error(`${$REF}() bindings can only be declared with let.`, decl)
+        error(`${callee}() bindings can only be declared with let.`, decl)
       }
       if (decl.id.type !== 'Identifier') {
         error(
-          `${$REF}() bindings cannot be used with destructuring. ` +
+          `${callee}() bindings cannot be used with destructuring. ` +
             `If you are trying to destructure from an object of refs, ` +
             `use \`let { x } = $fromRefs(obj)\`.`,
           decl.id
         )
       }
       registerRefBinding(decl.id)
-      s.overwrite(start, start + $REF.length, helper('ref'))
+      s.overwrite(
+        start,
+        start + callee.length,
+        helper(callee === $REF ? 'ref' : 'shallowRef')
+      )
     } else if (callee === $COMPUTED) {
       if (decl.id.type !== 'Identifier') {
         error(
-          `${$COMPUTED}() bindings cannot be used with destructuring.`,
+          `${callee}() bindings cannot be used with destructuring.`,
           decl.id
         )
       }
@@ -579,7 +592,7 @@ export function compileScript(
     } else if (callee === $FROM_REFS) {
       if (!decl.id.type.endsWith('Pattern')) {
         error(
-          `${$FROM_REFS}() declaration must be used with destructure patterns.`,
+          `${callee}() declaration must be used with destructure patterns.`,
           decl
         )
       }
@@ -643,7 +656,7 @@ export function compileScript(
         // append binding declarations after the parent statement
         s.appendLeft(
           statement.end! + startOffset,
-          `\nconst ${nameId.name} = ${helper('ref')}(__${nameId.name});`
+          `\nconst ${nameId.name} = ${helper('shallowRef')}(__${nameId.name});`
         )
       }
     }
@@ -677,7 +690,7 @@ export function compileScript(
         // append binding declarations after the parent statement
         s.appendLeft(
           statement.end! + startOffset,
-          `\nconst ${nameId.name} = ${helper('ref')}(__${nameId.name});`
+          `\nconst ${nameId.name} = ${helper('shallowRef')}(__${nameId.name});`
         )
       }
     }
@@ -814,6 +827,13 @@ export function compileScript(
             )
           }
         }
+      } else if (
+        (node.type === 'VariableDeclaration' ||
+          node.type === 'FunctionDeclaration' ||
+          node.type === 'ClassDeclaration') &&
+        !node.declare
+      ) {
+        walkDeclaration(node, setupBindings, userImportAlias)
       }
     }
   }
@@ -1091,7 +1111,7 @@ export function compileScript(
 
   // 3. Do a full walk to rewrite identifiers referencing let exports with ref
   // value access
-  if (enableRefSugar && Object.keys(refBindings).length) {
+  if (enableRefSugar) {
     const onIdent = (id: Identifier, parent: Node, parentStack: Node[]) => {
       if (refBindings[id.name] && !refIdentifiers.has(id)) {
         if (isStaticProperty(parent) && parent.shorthand) {
@@ -1110,13 +1130,23 @@ export function compileScript(
       }
     }
 
-    const onNode = (node: Node) => {
+    const onNode = (node: Node, parent: Node) => {
       if (isCallOf(node, $RAW)) {
         s.remove(
           node.callee.start! + startOffset,
           node.callee.end! + startOffset
         )
         return false // skip walk
+      } else if (
+        parent &&
+        isCallOf(node, isRefSugarCall) &&
+        (parent.type !== 'VariableDeclarator' || node !== parent.init)
+      ) {
+        error(
+          // @ts-ignore
+          `${node.callee.name} can only be used directly as a variable initializer.`,
+          node
+        )
       }
     }
 
@@ -1678,7 +1708,7 @@ function inferRuntimeType(
       return [
         ...new Set(
           [].concat(
-            node.types.map(t => inferRuntimeType(t, declaredTypes)) as any
+            ...(node.types.map(t => inferRuntimeType(t, declaredTypes)) as any)
           )
         )
       ]
@@ -1691,11 +1721,7 @@ function inferRuntimeType(
 }
 
 function toRuntimeTypeString(types: string[]) {
-  return types.some(t => t === 'null')
-    ? `null`
-    : types.length > 1
-    ? `[${types.join(', ')}]`
-    : types[0]
+  return types.length > 1 ? `[${types.join(', ')}]` : types[0]
 }
 
 function extractRuntimeEmits(
@@ -1778,7 +1804,13 @@ export function walkIdentifiers(
   ;(walk as any)(root, {
     enter(node: Node & { scopeIds?: Set<string> }, parent: Node | undefined) {
       parent && parentStack.push(parent)
-      if (node.type.startsWith('TS')) {
+      if (
+        parent &&
+        parent.type.startsWith('TS') &&
+        parent.type !== 'TSAsExpression' &&
+        parent.type !== 'TSNonNullExpression' &&
+        parent.type !== 'TSTypeAssertion'
+      ) {
         return this.skip()
       }
       if (onNode && onNode(node, parent!, parentStack) === false) {
@@ -2185,7 +2217,7 @@ function resolveTemplateUsageCheckString(sfc: SFCDescriptor) {
             !parserOptions.isNativeTag!(node.tag) &&
             !parserOptions.isBuiltInComponent!(node.tag)
           ) {
-            code += `,${capitalize(camelize(node.tag))}`
+            code += `,${camelize(node.tag)},${capitalize(camelize(node.tag))}`
           }
           for (let i = 0; i < node.props.length; i++) {
             const prop = node.props[i]
@@ -2209,10 +2241,21 @@ function resolveTemplateUsageCheckString(sfc: SFCDescriptor) {
     ]
   })
 
+  code += ';'
   templateUsageCheckCache.set(content, code)
   return code
 }
 
 function stripStrings(exp: string) {
-  return exp.replace(/'[^']+'|"[^"]+"|`[^`]+`/g, '')
+  return exp
+    .replace(/'[^']+'|"[^"]+"/g, '')
+    .replace(/`[^`]+`/g, stripTemplateString)
+}
+
+function stripTemplateString(str: string): string {
+  const interpMatch = str.match(/\${[^}]+}/g)
+  if (interpMatch) {
+    return interpMatch.map(m => m.slice(2, -1)).join(',')
+  }
+  return ''
 }

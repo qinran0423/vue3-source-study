@@ -6,24 +6,26 @@ describe('<script setup> ref sugar', () => {
     return compile(src, { refSugar: true })
   }
 
-  test('$ref declarations', () => {
+  test('$ref & $shallowRef declarations', () => {
     const { content, bindings } = compileWithRefSugar(`<script setup>
     let foo = $ref()
     let a = $ref(1)
-    let b = $ref({
+    let b = $shallowRef({
       count: 0
     })
     let c = () => {}
     let d
     </script>`)
-    expect(content).toMatch(`import { ref as _ref } from 'vue'`)
+    expect(content).toMatch(
+      `import { ref as _ref, shallowRef as _shallowRef } from 'vue'`
+    )
     expect(content).not.toMatch(`$ref()`)
     expect(content).not.toMatch(`$ref(1)`)
-    expect(content).not.toMatch(`$ref({`)
+    expect(content).not.toMatch(`$shallowRef({`)
     expect(content).toMatch(`let foo = _ref()`)
     expect(content).toMatch(`let a = _ref(1)`)
     expect(content).toMatch(`
-    let b = _ref({
+    let b = _shallowRef({
       count: 0
     })
     `)
@@ -184,14 +186,14 @@ describe('<script setup> ref sugar', () => {
       `let n = _ref(1), { a: __a, b: __c, d: __d = 1, e: __f = 2, ...__g } = (useFoo())`
     )
     expect(content).toMatch(`let { foo: __foo } = (useSomthing(() => 1))`)
-    expect(content).toMatch(`\nconst a = _ref(__a);`)
-    expect(content).not.toMatch(`\nconst b = _ref(__b);`)
-    expect(content).toMatch(`\nconst c = _ref(__c);`)
-    expect(content).toMatch(`\nconst d = _ref(__d);`)
-    expect(content).not.toMatch(`\nconst e = _ref(__e);`)
-    expect(content).toMatch(`\nconst f = _ref(__f);`)
-    expect(content).toMatch(`\nconst g = _ref(__g);`)
-    expect(content).toMatch(`\nconst foo = _ref(__foo);`)
+    expect(content).toMatch(`\nconst a = _shallowRef(__a);`)
+    expect(content).not.toMatch(`\nconst b = _shallowRef(__b);`)
+    expect(content).toMatch(`\nconst c = _shallowRef(__c);`)
+    expect(content).toMatch(`\nconst d = _shallowRef(__d);`)
+    expect(content).not.toMatch(`\nconst e = _shallowRef(__e);`)
+    expect(content).toMatch(`\nconst f = _shallowRef(__f);`)
+    expect(content).toMatch(`\nconst g = _shallowRef(__g);`)
+    expect(content).toMatch(`\nconst foo = _shallowRef(__foo);`)
     expect(content).toMatch(
       `console.log(n.value, a.value, c.value, d.value, f.value, g.value, foo.value)`
     )
@@ -216,9 +218,9 @@ describe('<script setup> ref sugar', () => {
     expect(content).toMatch(
       `let n = _ref(1), [__a, __b = 1, ...__c] = (useFoo())`
     )
-    expect(content).toMatch(`\nconst a = _ref(__a);`)
-    expect(content).toMatch(`\nconst b = _ref(__b);`)
-    expect(content).toMatch(`\nconst c = _ref(__c);`)
+    expect(content).toMatch(`\nconst a = _shallowRef(__a);`)
+    expect(content).toMatch(`\nconst b = _shallowRef(__b);`)
+    expect(content).toMatch(`\nconst c = _shallowRef(__c);`)
     expect(content).toMatch(`console.log(n.value, a.value, b.value, c.value)`)
     expect(content).toMatch(`return { n, a, b, c }`)
     expect(bindings).toStrictEqual({
@@ -238,11 +240,11 @@ describe('<script setup> ref sugar', () => {
     </script>`)
     expect(content).toMatch(`let [{ a: { b: __b }}] = (useFoo())`)
     expect(content).toMatch(`let { c: [__d, __e] } = (useBar())`)
-    expect(content).not.toMatch(`\nconst a = _ref(__a);`)
-    expect(content).not.toMatch(`\nconst c = _ref(__c);`)
-    expect(content).toMatch(`\nconst b = _ref(__b);`)
-    expect(content).toMatch(`\nconst d = _ref(__d);`)
-    expect(content).toMatch(`\nconst e = _ref(__e);`)
+    expect(content).not.toMatch(`\nconst a = _shallowRef(__a);`)
+    expect(content).not.toMatch(`\nconst c = _shallowRef(__c);`)
+    expect(content).toMatch(`\nconst b = _shallowRef(__b);`)
+    expect(content).toMatch(`\nconst d = _shallowRef(__d);`)
+    expect(content).toMatch(`\nconst e = _shallowRef(__e);`)
     expect(content).toMatch(`return { b, d, e }`)
     expect(bindings).toStrictEqual({
       b: BindingTypes.SETUP_REF,
@@ -279,6 +281,32 @@ describe('<script setup> ref sugar', () => {
     )
     assertCode(content)
     expect(content).not.toMatch('.value')
+  })
+
+  // #4254
+  test('handle TS casting syntax', () => {
+    const { content } = compile(
+      `
+      <script setup lang="ts">
+      let a = $ref(1)
+      console.log(a!) 
+      console.log(a! + 1) 
+      console.log(a as number) 
+      console.log((a as number) + 1) 
+      console.log(<number>a) 
+      console.log(<number>a + 1) 
+      console.log(a! + (a as number)) 
+      console.log(a! + <number>a) 
+      console.log((a as number) + <number>a)
+      </script>`,
+      {
+        refSugar: true
+      }
+    )
+    assertCode(content)
+    expect(content).toMatch('console.log(a.value!)')
+    expect(content).toMatch('console.log(a.value as number)')
+    expect(content).toMatch('console.log(<number>a.value)')
   })
 
   describe('errors', () => {
@@ -339,6 +367,27 @@ describe('<script setup> ref sugar', () => {
           { refSugar: true }
         )
       ).toThrow(`cannot reference locally declared variables`)
+    })
+
+    test('warn usage in non-init positions', () => {
+      expect(() =>
+        compile(
+          `<script setup>
+      let bar = $ref(1)
+      bar = $ref(2)
+    </script>`,
+          { refSugar: true }
+        )
+      ).toThrow(`$ref can only be used directly as a variable initializer`)
+
+      expect(() =>
+        compile(
+          `<script setup>
+      let bar = { foo: $computed(1) }
+    </script>`,
+          { refSugar: true }
+        )
+      ).toThrow(`$computed can only be used directly as a variable initializer`)
     })
   })
 })

@@ -90,7 +90,7 @@ export type VNodeHook =
 
 // https://github.com/microsoft/TypeScript/issues/33099
 export type VNodeProps = {
-  key?: string | number
+  key?: string | number | symbol
   ref?: VNodeRef
 
   // vnode hooks
@@ -138,7 +138,7 @@ export interface VNode<
 
   type: VNodeTypes
   props: (VNodeProps & ExtraProps) | null
-  key: string | number | null
+  key: string | number | symbol | null
   ref: VNodeNormalizedRef | null
   /**
    * SFC only. This is assigned on vnode creation using currentScopeId
@@ -730,7 +730,7 @@ export function normalizeChildren(vnode: VNode, children: unknown) {
   } else if (isArray(children)) {
     type = ShapeFlags.ARRAY_CHILDREN
   } else if (typeof children === 'object') {
-    if (shapeFlag & ShapeFlags.ELEMENT || shapeFlag & ShapeFlags.TELEPORT) {
+    if (shapeFlag & (ShapeFlags.ELEMENT | ShapeFlags.TELEPORT)) {
       // Normalize slot to plain children for plain element and Teleport
       const slot = (children as any).default
       if (slot) {
