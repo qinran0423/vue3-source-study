@@ -579,6 +579,7 @@ export function setupComponent(
   initProps(instance, props, isStateful, isSSR)
   initSlots(instance, children)
 
+  // 判断组件是否是stateful,做响应的处理
   const setupResult = isStateful
     ? setupStatefulComponent(instance, isSSR)
     : undefined
@@ -625,6 +626,7 @@ function setupStatefulComponent(
     exposePropsOnRenderContext(instance)
   }
   // 2. call setup()
+  //
   const { setup } = Component
   if (setup) {
     const setupContext = (instance.setupContext =
@@ -761,6 +763,7 @@ export function finishComponentSetup(
       Component.render ||
       NOOP) as InternalRenderFunction
   } else if (!instance.render) {
+    // 如果没有渲染函数 则用过编译器编译
     // could be set from setup()
     if (compile && !Component.render) {
       const template =
@@ -810,6 +813,7 @@ export function finishComponentSetup(
   }
 
   // support for 2.x options
+  // 通过单独的解析options选项兼容2.0
   if (__FEATURE_OPTIONS_API__ && !(__COMPAT__ && skipOptions)) {
     setCurrentInstance(instance)
     pauseTracking()

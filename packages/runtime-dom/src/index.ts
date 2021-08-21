@@ -32,6 +32,7 @@ let renderer: Renderer<Element | ShadowRoot> | HydrationRenderer
 
 let enabledHydration = false
 
+// 获取一个渲染器的实例
 function ensureRenderer() {
   return (
     renderer ||
@@ -56,6 +57,7 @@ export const hydrate = ((...args) => {
   ensureHydrationRenderer().hydrate(...args)
 }) as RootHydrateFunction
 
+// 获取vue的实例
 export const createApp = ((...args) => {
   const app = ensureRenderer().createApp(...args)
 
@@ -64,6 +66,8 @@ export const createApp = ((...args) => {
     injectCompilerOptionsCheck(app)
   }
 
+  // 拓展mount方法，可以在用户没有设置render函数或者template选项时，
+  // 获取根组件的模板
   const { mount } = app
   app.mount = (containerOrSelector: Element | ShadowRoot | string): any => {
     const container = normalizeContainer(containerOrSelector)

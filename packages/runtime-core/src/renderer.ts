@@ -302,6 +302,7 @@ export const queuePostRenderEffect = __FEATURE_SUSPENSE__
  * })
  * ```
  */
+// 获取渲染器的实例
 export function createRenderer<
   HostNode = RendererNode,
   HostElement = RendererElement
@@ -365,8 +366,8 @@ function baseCreateRenderer(
   // Note: functions inside this closure should use `const xxx = () => {}`
   // style in order to prevent being inlined by minifiers.
   const patch: PatchFn = (
-    n1,
-    n2,
+    n1, // 旧vnode
+    n2, // 新vnode
     container,
     anchor = null,
     parentComponent = null,
@@ -391,6 +392,7 @@ function baseCreateRenderer(
       n2.dynamicChildren = null
     }
 
+    // 根据最新的vnode类型做相应的处理
     const { type, ref, shapeFlag } = n2
     switch (type) {
       case Text:
@@ -433,6 +435,8 @@ function baseCreateRenderer(
             optimized
           )
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          // 首次初始化走这个分支
+          // 因为传入的是一个对象
           processComponent(
             n1,
             n2,
@@ -1191,8 +1195,9 @@ function baseCreateRenderer(
     }
   }
 
+  // 初始化挂在
   const mountComponent: MountComponentFn = (
-    initialVNode,
+    initialVNode, // 初始化vnode
     container,
     anchor,
     parentComponent,
@@ -1312,6 +1317,7 @@ function baseCreateRenderer(
     optimized
   ) => {
     const componentUpdateFn = () => {
+      // 未挂载，执行初始化流程
       if (!instance.isMounted) {
         let vnodeHook: VNodeHook | null | undefined
         const { el, props } = initialVNode
@@ -1378,6 +1384,8 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `render`)
           }
+
+          // 获取子树的虚拟dom
           const subTree = (instance.subTree = renderComponentRoot(instance))
           if (__DEV__) {
             endMeasure(instance, `render`)
@@ -1385,6 +1393,7 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `patch`)
           }
+          // 转换前面获取的vnode为node
           patch(
             null,
             subTree,
@@ -2312,10 +2321,15 @@ function baseCreateRenderer(
 
   const render: RootRenderFunction = (vnode, container, isSVG) => {
     if (vnode == null) {
+      // 如果vnode不存在则卸载
       if (container._vnode) {
         unmount(container._vnode, null, null, true)
       }
     } else {
+      // 否则则更新
+      // 参数1： old的虚拟节点
+      // 参数2：new的虚拟节点
+      // 参数3： 宿主
       patch(container._vnode || null, vnode, container, null, null, null, isSVG)
     }
     flushPostFlushCbs()
@@ -2343,6 +2357,8 @@ function baseCreateRenderer(
     )
   }
 
+  // 所谓的渲染器，其实就是一个对象，包含三个属性：
+  // render-渲染函数 hydrate-用于ssr， createApp-实例创建函数
   return {
     render,
     hydrate,
