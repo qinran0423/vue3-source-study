@@ -605,7 +605,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
   // - data (deferred since it relies on `this` access)
   // - computed
   // - watch (deferred since it relies on `this` access)
-
+  // 对inject的处理
   if (injectOptions) {
     resolveInjections(
       injectOptions,
@@ -615,6 +615,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
     )
   }
 
+  // 对methods的兼容处理
   if (methods) {
     for (const key in methods) {
       const methodHandler = (methods as MethodOptions)[key]
@@ -644,6 +645,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
     }
   }
 
+  // 对data的兼容处理
   if (dataOptions) {
     if (__DEV__ && !isFunction(dataOptions)) {
       warn(
@@ -662,6 +664,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
     if (!isObject(data)) {
       __DEV__ && warn(`data() should return an object.`)
     } else {
+      // 让data 变成响应式
       instance.data = reactive(data)
       if (__DEV__) {
         for (const key in data) {
@@ -683,6 +686,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
   // state initialization complete at this point - start caching access
   shouldCacheAccess = true
 
+  // 对computed的兼容处理
   if (computedOptions) {
     for (const key in computedOptions) {
       const opt = (computedOptions as ComputedOptions)[key]
@@ -720,12 +724,14 @@ export function applyOptions(instance: ComponentInternalInstance) {
     }
   }
 
+  // 对watch的兼容处理
   if (watchOptions) {
     for (const key in watchOptions) {
       createWatcher(watchOptions[key], ctx, publicThis, key)
     }
   }
 
+  // 对provide的兼容处理
   if (provideOptions) {
     const provides = isFunction(provideOptions)
       ? provideOptions.call(publicThis)

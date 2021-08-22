@@ -178,6 +178,7 @@ export function createAppAPI<HostElement>(
   render: RootRenderFunction,
   hydrate?: RootHydrateFunction
 ): CreateAppFunction<HostElement> {
+  // 此方法返回App实例
   // rootComponent：用户传入的根组件实例对象
   return function createApp(rootComponent, rootProps = null) {
     if (rootProps != null && !isObject(rootProps)) {
@@ -190,7 +191,7 @@ export function createAppAPI<HostElement>(
 
     let isMounted = false
 
-    // Vue实例
+    // 这就是外面得到App实例
     const app: App = (context.app = {
       _uid: uid++,
       _component: rootComponent as ConcreteComponent,
@@ -284,7 +285,7 @@ export function createAppAPI<HostElement>(
       ): any {
         // 初始化流程
         if (!isMounted) {
-          // 创建一个空的vnode
+          // 创建根组件的虚拟dom
           const vnode = createVNode(
             rootComponent as ConcreteComponent,
             rootProps

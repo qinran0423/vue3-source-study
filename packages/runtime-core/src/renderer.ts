@@ -1209,6 +1209,7 @@ function baseCreateRenderer(
     // mounting
     const compatMountInstance =
       __COMPAT__ && initialVNode.isCompatRoot && initialVNode.component
+    // 获取组件实例
     const instance: ComponentInternalInstance =
       compatMountInstance ||
       (initialVNode.component = createComponentInstance(
@@ -1236,6 +1237,8 @@ function baseCreateRenderer(
       if (__DEV__) {
         startMeasure(instance, `init`)
       }
+      // 安装组件： 初始化组件
+      // new Vue _init() 实例属性、方法初始化、数据响应式、两个生命周期钩子
       setupComponent(instance)
       if (__DEV__) {
         endMeasure(instance, `init`)
