@@ -20,11 +20,13 @@ export const enum PatchFlags {
   /**
    * Indicates an element with dynamic textContent (children fast path)
    */
+  // 只有文本是动态的 <p>{{xx}}</p>
   TEXT = 1,
 
   /**
    * Indicates an element with dynamic class binding.
    */
+  // <p :class="xx"></p>
   CLASS = 1 << 1,
 
   /**

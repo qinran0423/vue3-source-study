@@ -658,6 +658,7 @@ function baseCreateRenderer(
       if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         hostSetElementText(el, vnode.children as string)
       } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 如果children不是文本元素，说明拥有很多子元素的元素
         mountChildren(
           vnode.children as VNodeArrayChildren,
           el,
@@ -670,6 +671,7 @@ function baseCreateRenderer(
         )
       }
 
+      // 对指令操作
       if (dirs) {
         invokeDirectiveHook(vnode, null, parentComponent, 'created')
       }
@@ -1074,6 +1076,7 @@ function baseCreateRenderer(
     const fragmentStartAnchor = (n2.el = n1 ? n1.el : hostCreateText(''))!
     const fragmentEndAnchor = (n2.anchor = n1 ? n1.anchor : hostCreateText(''))!
 
+    // 补充标记，如果大于0，就是编译器优化
     let { patchFlag, dynamicChildren, slotScopeIds: fragmentSlotScopeIds } = n2
 
     if (__DEV__ && isHmrUpdating) {
