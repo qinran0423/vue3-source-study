@@ -260,6 +260,7 @@ export interface ComponentRenderContext {
   _: ComponentInternalInstance
 }
 
+// 对一些属性是从setup中获取 还是 data中获取做处理
 export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
   get({ _: instance }: ComponentRenderContext, key: string) {
     const { ctx, setupState, data, props, accessCache, type, appContext } =
@@ -294,9 +295,9 @@ export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
       const n = accessCache![key]
       if (n !== undefined) {
         switch (n) {
-          case AccessTypes.SETUP:
+          case AccessTypes.SETUP: //先从setup取值
             return setupState[key]
-          case AccessTypes.DATA:
+          case AccessTypes.DATA: //再从data中取值
             return data[key]
           case AccessTypes.CONTEXT:
             return ctx[key]

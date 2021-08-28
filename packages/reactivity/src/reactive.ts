@@ -94,7 +94,7 @@ export function reactive(target: object) {
     target,
     false,
     mutableHandlers,
-    mutableCollectionHandlers,
+    mutableCollectionHandlers, // Set Map
     reactiveMap
   )
 }
@@ -172,7 +172,7 @@ export function shallowReadonly<T extends object>(
 
 function createReactiveObject(
   target: Target,
-  isReadonly: boolean,
+  isReadonly: boolean, // 只读
   baseHandlers: ProxyHandler<any>,
   collectionHandlers: ProxyHandler<any>,
   proxyMap: WeakMap<Target, any>

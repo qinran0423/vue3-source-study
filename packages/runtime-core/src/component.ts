@@ -581,7 +581,7 @@ export function setupComponent(
   // 初始化Slots
   initSlots(instance, children)
 
-  // 判断组件是否是stateful,做响应的处理
+  // 判断组件是否是有状态的组件
   const setupResult = isStateful
     ? setupStatefulComponent(instance, isSSR)
     : undefined
@@ -589,6 +589,7 @@ export function setupComponent(
   return setupResult
 }
 
+// 安装状态组件
 function setupStatefulComponent(
   instance: ComponentInternalInstance,
   isSSR: boolean
@@ -623,13 +624,14 @@ function setupStatefulComponent(
   instance.accessCache = Object.create(null)
   // 1. create public instance / render proxy
   // also mark it raw so it's never observed
+  // 此处的ctx就是vue2的this，指的就是组件的实例
   instance.proxy = markRaw(new Proxy(instance.ctx, PublicInstanceProxyHandlers))
   if (__DEV__) {
     exposePropsOnRenderContext(instance)
   }
   // 2. call setup()
-  //
   const { setup } = Component
+  // setup函数的处理
   if (setup) {
     const setupContext = (instance.setupContext =
       setup.length > 1 ? createSetupContext(instance) : null)

@@ -142,6 +142,7 @@ export interface ReactiveEffectRunner<T = any> {
   effect: ReactiveEffect
 }
 
+// 传入副作用函数，添加依赖
 export function effect<T = any>(
   fn: () => T,
   options?: ReactiveEffectOptions

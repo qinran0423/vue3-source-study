@@ -1238,7 +1238,7 @@ function baseCreateRenderer(
         startMeasure(instance, `init`)
       }
       // 安装组件： 初始化组件
-      // new Vue _init() 实例属性、方法初始化、数据响应式、两个生命周期钩子
+      // new 类似 Vue _init() 实例属性、方法初始化、数据响应式、两个生命周期钩子
       setupComponent(instance)
       if (__DEV__) {
         endMeasure(instance, `init`)
@@ -1259,6 +1259,7 @@ function baseCreateRenderer(
       return
     }
 
+    // 安装渲染函数副作用，相当于updataComponent + watcher
     setupRenderEffect(
       instance,
       initialVNode,
@@ -1388,7 +1389,8 @@ function baseCreateRenderer(
             startMeasure(instance, `render`)
           }
 
-          // 获取子树的虚拟dom
+          // 首先获取组件vnode，其实就是调用组件render
+          // 这次调用出发了依赖收集
           const subTree = (instance.subTree = renderComponentRoot(instance))
           if (__DEV__) {
             endMeasure(instance, `render`)
@@ -1501,10 +1503,12 @@ function baseCreateRenderer(
         if (__DEV__) {
           startMeasure(instance, `render`)
         }
+        // 重新获取最新的渲染结果
         const nextTree = renderComponentRoot(instance)
         if (__DEV__) {
           endMeasure(instance, `render`)
         }
+        // 获取上一次渲染结果
         const prevTree = instance.subTree
         instance.subTree = nextTree
 
@@ -2322,6 +2326,7 @@ function baseCreateRenderer(
     return hostNextSibling((vnode.anchor || vnode.el)!)
   }
 
+  // 被mount调用
   const render: RootRenderFunction = (vnode, container, isSVG) => {
     if (vnode == null) {
       // 如果vnode不存在则卸载
