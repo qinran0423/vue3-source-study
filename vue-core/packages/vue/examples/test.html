@@ -1,0 +1,19 @@
+
+<script src="../dist/vue.global.js"></script>
+
+<div id="app">
+  <h1 :title="title">{{title}}</h1>
+</div>
+
+<script>
+  Vue.createApp({
+    data() {
+      return {
+        title: 'randy'
+      }
+    },
+  })
+  .mount('#app')
+
+
+</script>

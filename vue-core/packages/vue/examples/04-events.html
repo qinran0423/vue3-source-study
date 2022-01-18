@@ -1,0 +1,27 @@
+<script src="../dist/vue.global.js"></script>
+
+<div id="app">
+  <h1 @click="onChange">{{title}}</h1>
+</div>
+
+<script>
+  const {
+    createApp,
+    ref,
+  } = Vue
+  createApp({
+      setup() {
+        const title = ref('randy')
+
+
+        function onChange() {
+          console.log('q11111');
+        }
+        return {
+          title,
+          onChange
+        }
+      }
+    })
+    .mount('#app')
+</script>

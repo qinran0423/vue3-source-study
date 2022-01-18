@@ -1,0 +1,22 @@
+<script src="../dist/vue.global.js"></script>
+
+<div id="app">
+  <h1>{{counter}}</h1>
+  <p>hello vue3</p>
+</div>
+
+<script>
+  Vue.createApp({
+      data() {
+        return {
+          counter: 1
+        }
+      },
+      mounted() {
+        setInterval(() => {
+          this.counter++
+        }, 1000);
+      },
+    })
+    .mount('#app')
+</script>
