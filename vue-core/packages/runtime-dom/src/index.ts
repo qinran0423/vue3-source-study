@@ -42,7 +42,7 @@ let enabledHydration = false
 function ensureRenderer() {
   return (
     renderer ||
-    // 创建渲染器实例同事传入当前平台特有的节点操作
+    // 创建渲染器实例同时传入当前平台特有的节点操作
     (renderer = createRenderer<Node, Element | ShadowRoot>(rendererOptions))
   )
 }
@@ -151,7 +151,7 @@ function injectCompilerOptionsCheck(app: App) {
       set() {
         warn(
           `The \`isCustomElement\` config option is deprecated. Use ` +
-            `\`compilerOptions.isCustomElement\` instead.`
+          `\`compilerOptions.isCustomElement\` instead.`
         )
       }
     })
@@ -243,12 +243,12 @@ let ssrDirectiveInitialized = false
  */
 export const initDirectivesForSSR = __SSR__
   ? () => {
-      if (!ssrDirectiveInitialized) {
-        ssrDirectiveInitialized = true
-        initVModelForSSR()
-        initVShowForSSR()
-      }
+    if (!ssrDirectiveInitialized) {
+      ssrDirectiveInitialized = true
+      initVModelForSSR()
+      initVShowForSSR()
     }
+  }
   : NOOP
 
 // re-export everything from core

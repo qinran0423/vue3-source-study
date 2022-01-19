@@ -1,17 +1,21 @@
 <script src="../dist/vue.global.js"></script>
 
 <div id="app">
-  <h1 :title="title">{{title}}</h1>
-  <p>hello vue3</p>
+  <h1>{{title}}</h1>
 </div>
 
 <script>
-  Vue.createApp({
-      data() {
+  const {
+    createApp,
+    ref
+  } = Vue
+  createApp({
+      setup() {
+        const title = ref('vue3')
         return {
-          title: 'randy'
+          title
         }
-      },
+      }
     })
     .mount('#app')
 </script>
