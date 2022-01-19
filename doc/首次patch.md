@@ -137,4 +137,4 @@ unsetCurrentInstance()
 
 会执行componentUpdateFn中首先挂载逻辑中的patch,进入patch 然后就会执行processElement去创建div了就和刚开始Element的渲染逻辑一样了
 
-![image-20220119173842500](/Users/mick/Library/Application Support/typora-user-images/image-20220119173842500.png)
+![image](http://assets.processon.com/chart_image/61e7da67e401fd06a8e28c21.png)
