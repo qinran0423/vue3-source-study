@@ -1,8 +1,7 @@
 <script src="../dist/vue.global.js"></script>
 
 <div id="app">
-  <h1>{{title}}</h1>
-  <comp></comp>
+  <h1 class="red" :title="title">{{title}}</h1>
 </div>
 
 <script>
@@ -17,11 +16,6 @@
           title
         }
       }
-    })
-    .component('comp', {
-      template: `
-        <div>comp</div>
-        `
     })
     .mount('#app')
 </script>

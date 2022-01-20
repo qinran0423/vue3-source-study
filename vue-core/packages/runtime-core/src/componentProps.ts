@@ -447,6 +447,7 @@ function resolvePropValue(
   return value
 }
 
+// 对props的属性进行标准化
 export function normalizePropsOptions(
   comp: ConcreteComponent,
   appContext: AppContext,
