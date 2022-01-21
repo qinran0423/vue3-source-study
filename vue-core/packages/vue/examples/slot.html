@@ -1,0 +1,29 @@
+<script src="../dist/vue.global.js"></script>
+
+<div id="app">
+  <comp>
+    <div v-slot:header>header</div>
+    <div>content</div>
+    <div v-slot:footer>footer</div>
+  </comp>
+</div>
+
+<script>
+  Vue.createApp({
+      data() {
+        return {
+          title: 'randy'
+        }
+      },
+    })
+    .component('comp', {
+      template: `
+        <div>
+          <slot name="header"></slot>
+          <slot></slot>
+          <slot name="footer"></slot>
+        </div>
+        `
+    })
+    .mount('#app')
+</script>
