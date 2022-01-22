@@ -185,6 +185,7 @@ export function resetTracking() {
   shouldTrack = last === undefined ? true : last
 }
 
+// 依赖收集
 export function track(target: object, type: TrackOpTypes, key: unknown) {
   if (!isTracking()) {
     return

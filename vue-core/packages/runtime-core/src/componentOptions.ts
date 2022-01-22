@@ -644,6 +644,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
     }
   }
 
+  // data选项的处理部分
   if (dataOptions) {
     if (__DEV__ && !isFunction(dataOptions)) {
       warn(
