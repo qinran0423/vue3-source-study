@@ -2,9 +2,7 @@
 
 <div id="app">
   <comp>
-    <template v-slot:header>header</template>
-    <div>content</div>
-    <template v-slot:footer>footer</template>
+    <template v-slot:default="item">content {{item.age}}</template>
   </comp>
 </div>
 
@@ -17,11 +15,14 @@
       },
     })
     .component('comp', {
+      data(){
+        return {
+          age: 18
+        }
+      },
       template: `
         <div>
-          <slot name="header"></slot>
-          <slot></slot>
-          <slot name="footer"></slot>
+          <slot :age="age"></slot>
         </div>
         `
     })
