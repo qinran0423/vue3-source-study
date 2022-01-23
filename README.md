@@ -7,4 +7,5 @@
 3. [首次 patch](https://github.com/qinran0423/vue3-source-study/blob/main/doc/%E9%A6%96%E6%AC%A1patch.md)
 3. [属性初始化](https://github.com/qinran0423/vue3-source-study/blob/main/doc/%E5%B1%9E%E6%80%A7%E5%88%9D%E5%A7%8B%E5%8C%96.md)
 3. [slot](https://github.com/qinran0423/vue3-source-study/blob/main/doc/slot.md)
-3. [响应式]()
+3. [响应式](https://github.com/qinran0423/vue3-source-study/blob/main/doc/%E5%93%8D%E5%BA%94%E5%BC%8F.md)
+
