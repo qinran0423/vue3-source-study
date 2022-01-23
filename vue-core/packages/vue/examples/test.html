@@ -2,16 +2,24 @@
 <script src="../dist/vue.global.js"></script>
 
 <div id="app">
-  <h1 :title="title">{{title}}</h1>
+  <h1>{{obj.title}}</h1>
 </div>
 
 <script>
-  Vue.createApp({
-    data() {
-      return {
-        title: 'randy'
-      }
-    },
+  const { reactive, createApp, onMounted} = Vue
+  createApp({
+    setup() {
+      const obj = reactive({
+        title: 'vue3'
+      })
+
+      onMounted(() => {
+        setTimeout(() => {
+          obj.title = 'hello '
+        }, 1000);
+      })
+      return {obj}
+    }
   })
   .mount('#app')
 
