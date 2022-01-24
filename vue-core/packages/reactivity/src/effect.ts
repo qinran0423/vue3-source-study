@@ -185,6 +185,15 @@ export function resetTracking() {
   shouldTrack = last === undefined ? true : last
 }
 
+
+// const obj = reactive({
+//   name:'vue3'
+// })
+
+/**
+ *  { { name: 'vue3' } :  {  name: [ effect, effect ]        } }
+ */
+
 // 依赖收集
 export function track(target: object, type: TrackOpTypes, key: unknown) {
   if (!isTracking()) {
@@ -202,6 +211,7 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
   const eventInfo = __DEV__
     ? { effect: activeEffect, target, type, key }
     : undefined
+
 
   trackEffects(dep, eventInfo)
 }
@@ -249,9 +259,11 @@ export function trigger(
   oldValue?: unknown,
   oldTarget?: Map<unknown, unknown> | Set<unknown>
 ) {
+  //通过 targetMap 拿到 target 对应的依赖集合
   const depsMap = targetMap.get(target)
   if (!depsMap) {
     // never been tracked
+    // 没有依赖，直接返回
     return
   }
 
