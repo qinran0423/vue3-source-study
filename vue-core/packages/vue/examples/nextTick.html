@@ -2,7 +2,7 @@
 <script src="../dist/vue.global.js"></script>
 
 <div id="app">
-  <h1>{{obj.title}}</h1>
+  <h1>{{obj.num}}</h1>
   <button @click="onClick">点击</button>
 </div>
 
@@ -11,12 +11,14 @@
   createApp({
     setup() {
       const obj = reactive({
-        title: 'vue3'
+        num: 0
       })
       const instacne = getCurrentInstance()
       function onClick() {
-        obj.title = 'hello'
-        console.log(instacne);
+        for (let i = 0; i < 100; i++) {
+          console.log('update');
+          obj.num = i
+        }
       }
       return {obj, onClick}
     }
