@@ -1,4 +1,6 @@
-# nextTick
+# 异步更新&nextTick
+
+## 异步更新
 
 例子
 
@@ -92,7 +94,7 @@ function queueFlush() {
 }
 ```
 
-可以看到执行了一个promise.resolve,成功了之后执行了flushJobs
+可以看到resolvedPromise创建了一个promise.resolve, 成功了之后执行了flushJobs
 
 根据上面的例子，数据更新了100次，只有第一次的时候更新的操作会存在queue,也不可能去创建100个promise,利用了一个开关isFlushPending,第一次设置成true,之后都不会在去创建promise
 
@@ -178,3 +180,62 @@ export function callWithErrorHandling(
 ```
 
 执行传入的fn，执行完成之后我们的例子在视图中就可以看到效果了
+
+## nextTick
+
+在之前的例子上做点修改
+
+```js
+
+<script src="../dist/vue.global.js"></script>
+
+<div id="app">
+  <h1 id="h1">{{obj.num}}</h1>
+</div>
+
+<script>
+  const { reactive, createApp, onMounted, nextTick} = Vue
+  createApp({
+    setup() {
+      const obj = reactive({
+        num: 0
+      })
+      onMounted(() => {
+        obj.num = 1
+        obj.num = 2
+        obj.num = 3
+        console.log(h1.innerHTML);
+      })
+      return {obj}
+    },
+  })
+  .mount('#app')
+</script>
+```
+
+#### 复习一下
+
+在onMounted声明周期中，对obj.num修改了三次的值，所以queue这个数组只会存一次，在存第一次的时候会创建一个promise.resolve,当所有的同步行为执行完毕之后会执行promise.resolve成功的回调。因为`console.log(h1.innerHTML);`是同步行为，所以此时obj.num还是0，打印出来的结果肯定是0。我们希望得到的结果是3，则需要使用nextTick
+
+```js
+onMounted(() => {
+  obj.num = 1
+  obj.num = 2
+  obj.num = 3
+  nextTick(() => {
+    console.log(h1.innerHTML);
+  })
+})
+```
+
+```js
+export function nextTick<T = void>(
+  this: T,
+  fn?: (this: T) => void
+): Promise<void> {
+  const p = currentFlushPromise || resolvedPromise
+  return fn ? p.then(this ? fn.bind(this) : fn) : p
+}
+```
+
+可以看到nextTick其实也是创建了一个Promise.resolve 那nextTick中的回调当做是promise成功后then的回调，根据执行步骤，会先执行数据的异步更新操作，然后再执行nextTick,所以当执行nextTick的回调的时候，视图已经更新了。

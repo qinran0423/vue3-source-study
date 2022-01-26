@@ -2,26 +2,31 @@
 <script src="../dist/vue.global.js"></script>
 
 <div id="app">
-  <h1>{{obj.num}}</h1>
-  <button @click="onClick">点击</button>
+  <h1 id="h1">{{obj.num}}</h1>
 </div>
 
 <script>
-  const { reactive, createApp, onMounted, getCurrentInstance} = Vue
+  const { reactive, createApp, onMounted, nextTick} = Vue
   createApp({
     setup() {
       const obj = reactive({
         num: 0
       })
-      const instacne = getCurrentInstance()
-      function onClick() {
-        for (let i = 0; i < 100; i++) {
-          console.log('update');
-          obj.num = i
-        }
-      }
-      return {obj, onClick}
-    }
+
+
+      onMounted(() => {
+        obj.num = 1
+        obj.num = 2
+        nextTick(() => {
+          console.log(h1.innerHTML);
+        })
+        obj.num = 3
+        
+      })
+
+      return {obj}
+    },
+   
   })
   .mount('#app')
 </script>
