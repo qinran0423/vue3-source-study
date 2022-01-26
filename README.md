@@ -8,4 +8,4 @@
 3. [属性初始化](https://github.com/qinran0423/vue3-source-study/blob/main/doc/%E5%B1%9E%E6%80%A7%E5%88%9D%E5%A7%8B%E5%8C%96.md)
 3. [slot](https://github.com/qinran0423/vue3-source-study/blob/main/doc/slot.md)
 3. [响应式](https://github.com/qinran0423/vue3-source-study/blob/main/doc/%E5%93%8D%E5%BA%94%E5%BC%8F.md)
-
+3. [异步更新](https://github.com/qinran0423/vue3-source-study/blob/main/doc/nexTick.md)
