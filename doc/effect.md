@@ -331,3 +331,132 @@ const effect = (instance.effect = new ReactiveEffect(
 
 这段代码是渲染时候执行的，首次渲染则执行componentUpdateFn,componentUpdateFn中响应式数据发生变化的时候，会去执行triggerEffect,去遍历dep,拿到effect,判断effect中schduler是否存在，这里scheduler刚好存在，则执行scheduler。
 
+### 测试四
+
+```js
+it('stop', () => {
+    let dummy
+    const obj = reactive({ prop: 1 })
+    const runner = effect(() => {
+      dummy = obj.prop
+    })
+    obj.prop = 2
+    expect(dummy).toBe(2)
+    stop(runner)
+    obj.prop = 3
+    expect(dummy).toBe(2)
+
+    // stopped effect should still be manually callable
+    runner()
+    expect(dummy).toBe(3)
+  })
+```
+
+这段测试代码中将effect返回的函数用stop包裹了一下，然后当响应式数据发生了变化，就不会在触发依赖更新了。
+
+猜测：当执行stop的时候，将dep的对应的依赖删掉？
+
+```js
+
+export function stop(runner: ReactiveEffectRunner) {
+  runner.effect.stop()
+}
+```
+
+stop的参数是runner，也就是测试中effect执行返回的runner。
+
+```js
+export function effect<T = any>(
+  fn: () => T,
+  options?: ReactiveEffectOptions
+): ReactiveEffectRunner {
+  const _effect = new ReactiveEffect(fn)
+  const runner = _effect.run.bind(_effect) as ReactiveEffectRunner
+  runner.effect = _effect
+  return runner
+}
+```
+
+上面说到runner其实就是`_effect.run`，然后有吧`new ReactiveEffect`的实例`_effect`挂到了runner.effect上面。stop中就是执行的这个实例上面的stop。
+
+```js
+export class ReactiveEffect<T = any> {
+  active = true
+  deps: Dep[] = []
+
+  // can be attached after creation
+  computed?: boolean
+  allowRecurse?: boolean
+  onStop?: () => void
+  // dev only
+  onTrack?: (event: DebuggerEvent) => void
+  // dev only
+  onTrigger?: (event: DebuggerEvent) => void
+
+  constructor(
+    public fn: () => T,
+    public scheduler: EffectScheduler | null = null,
+    scope?: EffectScope | null
+  ) {
+    recordEffectScope(this, scope)
+  }
+
+  run() {
+    ···
+  }
+
+  stop() {
+    if (this.active) {
+      cleanupEffect(this)
+      if (this.onStop) {
+        this.onStop()
+      }
+      this.active = false
+    }
+  }
+}
+function cleanupEffect(effect: ReactiveEffect) {
+  const { deps } = effect
+  if (deps.length) {
+    for (let i = 0; i < deps.length; i++) {
+      deps[i].delete(effect)
+    }
+    deps.length = 0
+  }
+}
+```
+
+在执行stop的时候，this.active判断是否已经清空过了（性能优化）。然后执行了cleanupEffect(this)，可以想到这一步就是清除依赖的。在cleanupEffect中首先是从实例中拿到deps。
+
+疑问：那这个deps是什么时候存的呢？
+
+回忆一下收集依赖的时候：
+
+```js
+export function trackEffects(
+  dep: Dep,
+  debuggerEventExtraInfo?: DebuggerEventExtraInfo
+) {
+  let shouldTrack = false
+  if (effectTrackDepth <= maxMarkerBits) {
+    if (!newTracked(dep)) {
+      dep.n |= trackOpBit // set newly tracked
+      shouldTrack = !wasTracked(dep)
+    }
+  } else {
+    // Full cleanup mode.
+    shouldTrack = !dep.has(activeEffect!)
+  }
+
+  if (shouldTrack) {
+    dep.add(activeEffect!)
+    activeEffect!.deps.push(dep)
+  }
+}
+```
+
+当dep收集到当前的activeEffect,反向activeEffect中的deps也收集了dep。
+
+理解一下：为什么要反向收集？因为要知道当前的副作用被拿些dep收集了，后续清除依赖的时候，可以一并把这些dep中的activeEffect全部清掉。
+
+上面说到拿到deps，然后遍历删除对应的activeEffect就可以了。所以此时当响应式数据再次发生变化的时候就找不到对应的依赖了。
