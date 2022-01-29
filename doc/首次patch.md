@@ -131,7 +131,7 @@ unsetCurrentInstance()
 
 #### setupRenderEffect
 
-1. 创建更新函数`componetUpdateFn`
+1. 创建更新函数`componentUpdateFn`
 2. 创建`componentUpdateFn` 的副作用 `new ReactiveEffect`
 3. `update`
 
