@@ -460,3 +460,19 @@ export function trackEffects(
 理解一下：为什么要反向收集？因为要知道当前的副作用被拿些dep收集了，后续清除依赖的时候，可以一并把这些dep中的activeEffect全部清掉。
 
 上面说到拿到deps，然后遍历删除对应的activeEffect就可以了。所以此时当响应式数据再次发生变化的时候就找不到对应的依赖了。
+
+### 测试五
+
+```js
+it('events: onStop', () => {
+  const onStop = jest.fn()
+  const runner = effect(() => {}, {
+    onStop
+  })
+
+  stop(runner)
+  expect(onStop).toHaveBeenCalled()
+})
+```
+
+测试中，模拟了函数onStop,然后将这个函数传入了effect的第二个参数。
