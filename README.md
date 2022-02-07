@@ -10,3 +10,5 @@
 3. [响应式](https://github.com/qinran0423/vue3-source-study/blob/main/doc/%E5%93%8D%E5%BA%94%E5%BC%8F.md)
 3. [异步更新](https://github.com/qinran0423/vue3-source-study/blob/main/doc/nexTick.md)
 3. [effect](https://github.com/qinran0423/vue3-source-study/blob/main/doc/effect.md)
+3. [readonly](https://github.com/qinran0423/vue3-source-study/blob/main/doc/readonly.md)
+
