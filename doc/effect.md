@@ -464,6 +464,20 @@ export function trackEffects(
 ### 测试五
 
 ```js
+import {
+  reactive,
+  effect,
+  stop,
+  toRaw,
+  TrackOpTypes,
+  TriggerOpTypes,
+  DebuggerEvent,
+  markRaw,
+  shallowReactive,
+  readonly,
+  ReactiveEffectRunner
+} from '../src/index'
+
 it('events: onStop', () => {
   const onStop = jest.fn()
   const runner = effect(() => {}, {
@@ -476,3 +490,51 @@ it('events: onStop', () => {
 ```
 
 测试中，模拟了函数onStop,然后将这个函数传入了effect的第二个参数。
+
+stop是已经定义好的方法，当执行了stop并且传入了runner,结果发现onStop执行了。
+
+看下stop方法
+
+```js
+export function stop(runner: ReactiveEffectRunner) {
+  runner.effect.stop()
+}
+```
+
+再来会议一下这个runner是什么。
+
+```js
+export function effect<T = any>(
+  fn: () => T,
+  options?: ReactiveEffectOptions
+): ReactiveEffectRunner {
+  const _effect = new ReactiveEffect(fn)
+  if (options) {
+    extend(_effect, options)
+    if (options.scope) recordEffectScope(_effect, options.scope)
+  }
+  const runner = _effect.run.bind(_effect) as ReactiveEffectRunner
+  runner.effect = _effect
+  return runner
+}
+```
+
+runner其实就是`_effect.run`（触发副作用），把`_effect`保存到了runner.effect上面了。而上面的stop的方法接受参数runner，然后拿到了runner的effect调用了stop。
+
+在调用了stop中执行了这样的代码
+
+```js
+stop() {
+    if (this.active) {
+      cleanupEffect(this)
+      if (this.onStop) {
+        this.onStop()
+      }
+      this.active = false
+    }
+  }
+```
+
+如果`this.onStop`存在在执行`this.onStop`
+
+由于`extend(_effect, options)`所以effect的第二个参数`{onStop}`会被合并到实例上面，所以onStop会被调用
