@@ -2,12 +2,17 @@
 <script src="../dist/vue.global.js"></script>
 
 <div id="app">
-  <h1 id="h1">{{obj.num}}</h1>
+  <!-- <h1 id="h1">{{obj.num}}</h1> -->
 </div>
 
 <script>
-  const { reactive, createApp, onMounted, nextTick} = Vue
+  const { reactive, createApp, onMounted, nextTick, toRefs} = Vue
   createApp({
+    data() {
+      return {
+        num: 1
+      }
+    },
     setup() {
       const obj = reactive({
         num: 0
@@ -24,9 +29,11 @@
         
       })
 
-      return {obj}
+      return {...toRefs(obj)}
     },
-   
+    mounted() {
+      console.log(this.num)
+    },
   })
   .mount('#app')
 </script>
