@@ -11,6 +11,6 @@
 3. [异步更新](https://github.com/qinran0423/vue3-source-study/blob/main/doc/nexTick.md)
 3. [effect](https://github.com/qinran0423/vue3-source-study/blob/main/doc/effect.md)
 3. [readonly](https://github.com/qinran0423/vue3-source-study/blob/main/doc/readonly.md)
-3. [isReactive和isReadonly]()
+3. [isReactive和isReadonly](https://github.com/qinran0423/vue3-source-study/blob/main/doc/isReactive%E5%92%8CisReadonly.md)
 3. [ref](https://github.com/qinran0423/vue3-source-study/blob/main/doc/ref.md)
 
