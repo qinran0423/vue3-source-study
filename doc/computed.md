@@ -57,7 +57,7 @@ class ComputedRefImpl<T> {
   get value() {
     // the computed ref may get wrapped by other proxies e.g. readonly() #3376
     const self = toRaw(this)
-    trackRefValue(self)
+  
     if (self._dirty) {
       self._dirty = false
       self._value = self.effect.run()!
@@ -73,31 +73,7 @@ class ComputedRefImpl<T> {
 
 `new ComputedRefImpl`构造函数会`new ReactiveEffect`创建一个副作用。
 
-当访问由`ComputedRefImpl`类创建的实例的value的时候(所以访问计算属性的值得时候需要.value)，会触发get，然后会触发trackRefValue去收集依赖。
-
-```js
-export function trackRefValue(ref: RefBase<any>) {
-  if (isTracking()) {
-    ref = toRaw(ref)
-    if (!ref.dep) {
-      ref.dep = createDep()
-    }
-    if (__DEV__) {
-      trackEffects(ref.dep, {
-        target: ref,
-        type: TrackOpTypes.GET,
-        key: 'value'
-      })
-    } else {
-      trackEffects(ref.dep)
-    }
-  }
-}
-```
-
-这里的依赖收集和ref的基本上没什么差别，ComputedRefImpl类中默认定义了属性dep就是为了收集依赖用的，这里收集的依赖就是我们`new ComputedRefImpl`构造函数会`new ReactiveEffect`创建一个副作用。
-
-注意：reactive创建的响应式对象也会去收集依赖，同样也是把这个依赖收集起来。
+当访问由`ComputedRefImpl`类创建的实例的value的时候(所以访问计算属性的值得时候需要.value)，会触发get
 
 ```js
 if (self._dirty) {
@@ -108,7 +84,11 @@ if (self._dirty) {
 
 这一步操作，我认为是computed的精髓。_dirty默认是true
 
-首先会判断_dirty是否为true,第一次的时候肯定是true,接着就把这个值设置为fasle,然后把`self.effect.run()`返回结果赋值给` self._value`.（这里忘了的话可以看[effect](https://github.com/qinran0423/vue3-source-study/blob/main/doc/effect.md)）。然后返回` self._value`
+首先会判断_dirty是否为true,第一次的时候肯定是true,接着就把这个值设置为fasle,然后把`self.effect.run()`返回结果赋值给` self._value`.（这里忘了的话可以看[effect](https://github.com/qinran0423/vue3-source-study/blob/main/doc/effect.md)）。
+
+执行run的时候就会访问响应式数据的值去收集依赖。
+
+然后返回` self._value`
 
 ```js
 it('should compute lazily', () => {
@@ -150,19 +130,14 @@ it('should compute lazily', () => {
 () => {
   if (!this._dirty) {
     this._dirty = true
-    triggerRefValue(this)
   }
 })
 ```
 
-这里如果_dirty为false的时候， 则将设置成true.然后通过triggerRefValue触发依赖的更新。
+这里如果_dirty为false的时候， 则将设置成true。
 
 当再次的访问computed的时候，会触发get,由于_dirty此时变成了true 所以会再次执行`self._value = self.effect.run()!`重新赋值。
-
-
 
 如果连续访问computed的value的时候，而computed依赖的响应式数据没有发生变化，_dirty只有第一次访问的时候为true,后面再访问就是false,拿到的也就是第一次访问的值，这就建立了缓存
 
 
-
-疑惑: 为什么要在get的时候通过trackRefValue收集依赖，在scheduler触发依赖？
