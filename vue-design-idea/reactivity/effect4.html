@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+  <script type="module">
+    import {reactive, effect} from './effect.js'
+
+    const obj = reactive({foo: 1})
+    const jobQueue = new Set()
+
+    const p = Promise.resolve()
+
+    let isFlushing = false
+
+    function flushJob() {
+      //  如果队列正在刷新，则什么都不做
+      if(isFlushing) return
+      
+      isFlushing = true
+
+      p.then(() => {
+        jobQueue.forEach(job => job())
+      }).finally(() => {
+        isFlushing = false
+      })
+    }
+
+
+    effect(() => {
+      console.log(obj.foo);
+    }, {
+      scheduler(fn) {
+        jobQueue.add(fn)
+
+        flushJob()
+      }
+    })
+
+
+    obj.foo++
+    obj.foo++
+  </script>
+</body>
+
+</html>

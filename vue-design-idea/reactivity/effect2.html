@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script type="module">
+    import {reactive, effect} from './effect.js'
+
+    const data = {foo: true,  bar: true}
+
+    const obj = reactive(data)
+
+    let temp1, temp2
+
+    effect(function effectFn1() {
+      console.log('effectFn1 执行');
+
+      effect(function effectFn2() {
+        console.log('effectFn2 执行');
+        
+        temp2 = obj.bar
+      })
+
+      temp1 = obj.foo
+    })
+
+
+    setTimeout(() => {
+      obj.foo = false
+    }, 1000);
+  </script>
+</body>
+
+</html>
