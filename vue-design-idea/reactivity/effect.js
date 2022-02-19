@@ -132,3 +132,46 @@ export function computed(getter) {
 
   return obj
 }
+
+
+export function watch(source, cb) {
+
+  let getter
+
+  if (typeof source === 'function') {
+    getter = source
+  } else {
+    getter = () => traverse(source)
+  }
+  let oldValue, newValue
+
+  const effectFn = effect(
+    () => getter(),
+    {
+      lazy: true,
+      scheduler() {
+        newValue = effectFn()
+        cb(newValue, oldValue)
+        oldValue = newValue
+      }
+    }
+  )
+
+
+  oldValue = effectFn()
+}
+
+
+function traverse(value, seen = new Set()) {
+  // 如果读取的数据是原始值，或者已经被读取过了，那么什么都不做
+  if (typeof value !== 'object' || value === null || seen.has(value)) return
+
+  seen.add(value)
+
+  for (const k in value) {
+    traverse(value[k], seen)
+  }
+
+  return value
+
+}
