@@ -134,7 +134,7 @@ export function computed(getter) {
 }
 
 
-export function watch(source, cb) {
+export function watch(source, cb, options = []) {
 
   let getter
 
@@ -145,20 +145,34 @@ export function watch(source, cb) {
   }
   let oldValue, newValue
 
+
+  const job = () => {
+    newValue = effectFn()
+    cb(newValue, oldValue)
+    oldValue = newValue
+  }
   const effectFn = effect(
     () => getter(),
     {
       lazy: true,
-      scheduler() {
-        newValue = effectFn()
-        cb(newValue, oldValue)
-        oldValue = newValue
+      scheduler: () => {
+        if (options.flush === 'post') {
+          const p = Promise.resolve()
+          p.then(job)
+        } else {
+          job()
+        }
       }
     }
   )
 
 
-  oldValue = effectFn()
+  if (options.immediate) {
+    job()
+  } else {
+    oldValue = effectFn()
+  }
+
 }
 
 
