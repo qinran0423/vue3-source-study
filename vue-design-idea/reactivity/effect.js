@@ -37,9 +37,9 @@ const bucket = new WeakMap()
 
 export function reactive(data) {
   const obj = new Proxy(data, {
-    get(target, key) {
+    get(target, key, receiver) {
       track(target, key)
-      return target[key]
+      return Reflect.get(target, key, receiver)
     },
     set(target, key, newVal) {
       target[key] = newVal
@@ -135,7 +135,7 @@ export function computed(getter) {
 
 
 export function watch(source, cb, options = []) {
-
+  debugger
   let getter
 
   if (typeof source === 'function') {
