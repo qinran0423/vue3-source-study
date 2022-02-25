@@ -395,4 +395,20 @@ describe('reactivity/ref', () => {
     b.value = obj
     expect(spy2).toBeCalledTimes(1)
   })
+
+  it('should not trigger when the same value', () => {
+    const a = ref({
+      foo: 1
+    })
+    let dummy = 0
+    effect(() => {
+      dummy++
+      console.log(a.value.foo);
+
+    })
+    expect(dummy).toBe(1)
+    a.value = { foo: 1 }
+    expect(dummy).toBe(2)
+
+  })
 })
