@@ -26,13 +26,26 @@
 
   // count.value++
 
-  import { createRenderer } from "./src/renderer.js"
-
+  import { createRenderer, shouldSetAsProps} from "./src/renderer.js"
   const vnode = {
-    type: 'h1',
-    children: 'hello'
+    type: 'div',
+    props:{
+      id: 'foo'
+    },
+    children: [
+      {
+        type: 'p',
+        children: 'hello'
+      },
+      {
+        type: 'button', 
+        props: {
+          disable: ''
+        },
+        children: 'button'
+      }
+    ]
   }
-
 
   // 创建一个渲染器
   const renderer = createRenderer({
@@ -44,6 +57,21 @@
     },
     insert(el, parent, anchor = null) {
       parent.insertBefore(el, anchor)
+    },
+    patchProps(el, key, preValue, nextValue) {
+      if(key === 'class') {
+        el.className = nextValue || ''
+      } else if(shouldSetAsProps(el, key, nextValue)) {
+        const type = typeof el[key]
+
+        if(type === 'boolean' && nextValue === '') {
+          el[key] = true
+        } else {
+          el[key] = nextValue
+        }
+      } else {
+        el.setAttribute(key, nextValue)
+      }
     }
   })
   // 调用render函数渲染该vnode
