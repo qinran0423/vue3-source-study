@@ -3,49 +3,13 @@
 
 </body>
 
-<!-- <script src="https://unpkg.com/vue@3"></script> -->
+<script src="https://unpkg.com/vue@3"></script>
 
 
 <script type="module">
 
-  // const {
-  //   effect,
-  //   ref
-  // } = Vue
-
-
-  // function renderer(doString, contianer) {
-  //   contianer.innerHTML = doString
-  // }
-
-
-  // const count = ref(1)
-  // effect(() => {
-  //   renderer(`<h1>${count.value}</h1>`, document.getElementById('app'))
-  // })
-
-  // count.value++
-
   import { createRenderer, shouldSetAsProps} from "./src/renderer.js"
-  const vnode = {
-    type: 'div',
-    props:{
-      id: 'foo'
-    },
-    children: [
-      {
-        type: 'p',
-        children: 'hello'
-      },
-      {
-        type: 'button', 
-        props: {
-          disable: ''
-        },
-        children: 'button'
-      }
-    ]
-  }
+
 
   // 创建一个渲染器
   const renderer = createRenderer({
@@ -98,9 +62,46 @@
       }
     }
   })
-  // 调用render函数渲染该vnode
-  renderer.render(vnode, document.querySelector('#app'))
 
+
+  const {
+    effect,
+    ref
+  } = Vue
+
+  const bol = ref(false)
+  effect(() => {
+    console.log('aaaa', bol.value);
+    const vnode = {
+      type: 'div',
+      props:  bol.value ? {
+        onClick: () => {
+          console.log('cccccc');
+        }
+      } : {},
+      children: [
+        {
+          type: 'p',
+          props: {
+            onClick: () => {
+              console.log('xxxx');
+              bol.value = true
+            }
+          },
+          children: 'hello'
+        },
+      ]
+    }
+
+    // 调用render函数渲染该vnode
+    renderer.render(vnode, document.querySelector('#app'))
+  })
+  
+
+
+  
+
+  
 
 
 </script>

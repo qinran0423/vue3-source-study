@@ -13,8 +13,10 @@ export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
   },
 
   remove: child => {
+    // 找到父节点
     const parent = child.parentNode
     if (parent) {
+      // 基于父节点移除子节点
       parent.removeChild(child)
     }
   },
@@ -25,7 +27,7 @@ export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
       : doc.createElement(tag, is ? { is } : undefined)
 
     if (tag === 'select' && props && props.multiple != null) {
-      ;(el as HTMLSelectElement).setAttribute('multiple', props.multiple)
+      ; (el as HTMLSelectElement).setAttribute('multiple', props.multiple)
     }
 
     return el
@@ -65,7 +67,7 @@ export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
     // - This may need to account for other custom DOM properties we attach to
     //   elements in addition to `_value` in the future.
     if (`_value` in el) {
-      ;(cloned as any)._value = (el as any)._value
+      ; (cloned as any)._value = (el as any)._value
     }
     return cloned
   },

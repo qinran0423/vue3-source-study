@@ -365,6 +365,7 @@ function baseCreateRenderer(
     }
 
     // patching & not same type, unmount old tree
+    // 旧节点存在， 新的节点的类型和旧节点的类型不一样  则需要卸载旧节点
     if (n1 && !isSameVNodeType(n1, n2)) {
       anchor = getNextHostNode(n1)
       unmount(n1, parentComponent, parentSuspense, true)

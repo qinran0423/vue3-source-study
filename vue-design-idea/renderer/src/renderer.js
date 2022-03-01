@@ -37,6 +37,58 @@ export function createRenderer(options) {
   }
 
 
+  function patchElement(n1, n2) {
+    const el = n2.el = n1.el
+    const oldProps = n1.props
+    const newProps = n2.props
+    // 更新props
+    for (const key in newProps) {
+      if (newProps[key] !== oldProps[key]) {
+        patchProps(el, key, oldProps[key], newProps[key])
+      }
+    }
+
+
+    for (const key in oldProps) {
+      if (!(key in newProps)) {
+        patchProps(el, key, oldProps[key], null)
+      }
+    }
+
+    // 更新children
+    patchChildren(n1, n2, container)
+  }
+  function patchChildren(n1, n2, container) {
+    // 判断新子节点的类型是否是文本节点
+    if (typeof n2.children === 'string') {
+      if (Array.isArray(n1.children)) {
+        n1.children.forEach((c) => unmount(c))
+      }
+      setElementText(container, n2.children)
+    } else if (Array.isArray(n2.children)) {
+      // 新子节点是一组子节点
+      // TODO diff
+      if (Array.isArray(n1.children)) {
+        n1.children.forEach(c => unmount(c))
+
+        n2.children.forEach(c => patch(null, c, container))
+      } else {
+        setElementText(container, '')
+
+        n2.children.forEach(c => patch(null, c, container))
+      }
+
+    } else {
+      // 新子节点不存在
+
+      if (Array.isArray(n1.children)) {
+        n1.children.forEach(c => unmount(c))
+      } else if (typeof n1.children === 'string') {
+        setElementText(container, '')
+      }
+    }
+  }
+
   function mountElement(vnode, container) {
     // 创建Dom元素
     const el = vnode.el = createElement(vnode.type)
