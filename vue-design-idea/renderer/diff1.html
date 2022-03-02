@@ -28,7 +28,7 @@
 
   import { renderer } from "./src/runtime-dom.js"
 
-  const isChange = ref(false)
+  
   const oldVnode = {
     type: 'div',
     children: [
@@ -46,15 +46,10 @@
       {type: 'p', children: '6'},
     ]
   }
-  
-  effect(() => {
-    isChange.value ? 
-    renderer.render(newVnode, document.querySelector('#app'))
-    : 
-    renderer.render(oldVnode, document.querySelector('#app'))
-  })
+
+  renderer.render(oldVnode, document.querySelector('#app'))
   setTimeout(() => {
-    isChange.value = true
+    renderer.render(newVnode, document.querySelector('#app'))
   }, 2000);
   
 

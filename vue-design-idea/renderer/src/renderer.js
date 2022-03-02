@@ -79,7 +79,7 @@ export function createRenderer(options) {
         const commonLength = Math.min(oldLen, newLen)
 
         for (let i = 0; i < commonLength; i++) {
-          patch(oldChildren[i], newChildren[i])
+          patch(oldChildren[i], newChildren[i], container)
         }
 
         if (newLen > oldLen) {
@@ -91,6 +91,21 @@ export function createRenderer(options) {
             unmount(oldChildren[i])
           }
         }
+
+        // 遍历新的children
+        // for (let i = 0; i < newChildren.length; i++) {
+        //   const newVNode = newChildren[i]
+        //   // 遍历旧的children
+        //   for (let j = 0; j < oldChildren.length; j++) {
+        //     const oldVNode = oldChildren[j]
+        //     // 如果找到具有相同的key值得两个节点，说明可以复用，仍然需要调用patch函数更新
+        //     if (newVNode.key === oldVNode.key) {
+        //       patch(oldVNode, newVNode, container)
+        //       break
+        //     }
+        //   }
+        // }
+
       } else {
         setElementText(container, '')
 
