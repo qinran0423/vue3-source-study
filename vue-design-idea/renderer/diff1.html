@@ -1,0 +1,63 @@
+<body>
+  <div id="app"></div>
+
+</body>
+
+<script src="https://unpkg.com/vue@3"></script>
+
+
+<script type="module">
+
+  const {
+    effect,
+    ref
+  } = Vue
+
+
+  // function renderer(doString, contianer) {
+  //   contianer.innerHTML = doString
+  // }
+
+
+  // const count = ref(1)
+  // effect(() => {
+  //   renderer(`<h1>${count.value}</h1>`, document.getElementById('app'))
+  // })
+
+  // count.value++
+
+  import { renderer } from "./src/runtime-dom.js"
+
+  const isChange = ref(false)
+  const oldVnode = {
+    type: 'div',
+    children: [
+      {type: 'p', children: '1'},
+      {type: 'p', children: '2'},
+      {type: 'p', children: '3'},
+    ]
+  }
+
+  const newVnode = {
+    type: 'div',
+    children: [
+      {type: 'p', children: '4'},
+      {type: 'p', children: '5'},
+      {type: 'p', children: '6'},
+    ]
+  }
+  
+  effect(() => {
+    isChange.value ? 
+    renderer.render(newVnode, document.querySelector('#app'))
+    : 
+    renderer.render(oldVnode, document.querySelector('#app'))
+  })
+  setTimeout(() => {
+    isChange.value = true
+  }, 2000);
+  
+
+
+
+</script>

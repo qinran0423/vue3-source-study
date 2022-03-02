@@ -29,7 +29,7 @@ export function createRenderer(options) {
         mountElement(n2, container)
       } else {
         // n1存在，需要更新
-        patchElement(n1, n2)
+        patchElement(n1, n2, container)
       }
     } else if (typeof type === 'object') {
       // 如果n2.type是对象，则它描述的事组件
@@ -37,7 +37,7 @@ export function createRenderer(options) {
   }
 
 
-  function patchElement(n1, n2) {
+  function patchElement(n1, n2, container) {
     const el = n2.el = n1.el
     const oldProps = n1.props
     const newProps = n2.props
@@ -69,9 +69,28 @@ export function createRenderer(options) {
       // 新子节点是一组子节点
       // TODO diff
       if (Array.isArray(n1.children)) {
-        n1.children.forEach(c => unmount(c))
+        const oldChildren = n1.children
+        const newChildren = n2.children
+        // 旧的一组子节点的长度
+        const oldLen = oldChildren.length
+        // 新的一组子节点的长度
+        const newLen = newChildren.length
+        // 两组子节点的公共长度， 即两者中较短的那一组子节点的长度
+        const commonLength = Math.min(oldLen, newLen)
 
-        n2.children.forEach(c => patch(null, c, container))
+        for (let i = 0; i < commonLength; i++) {
+          patch(oldChildren[i], newChildren[i])
+        }
+
+        if (newLen > oldLen) {
+          for (let i = commonLength; i < newLen; i++) {
+            patch(null, newChildren[i], container)
+          }
+        } else if (oldLen > newLen) {
+          for (let i = commonLength; i < oldLen; i++) {
+            unmount(oldChildren[i])
+          }
+        }
       } else {
         setElementText(container, '')
 
