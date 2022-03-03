@@ -56,7 +56,7 @@ export function createRenderer(options) {
     }
 
     // 更新children
-    patchChildren(n1, n2, container)
+    patchChildren(n1, n2, el)
   }
   function patchChildren(n1, n2, container) {
     // 判断新子节点的类型是否是文本节点
@@ -165,7 +165,7 @@ export function createRenderer(options) {
   function unmount(vnode) {
     const parent = vnode.el.parentNode
 
-    if (parent) parent.removeChild(el)
+    if (parent) parent.removeChild(vnode.el)
   }
 
   return {

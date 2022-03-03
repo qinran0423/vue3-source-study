@@ -27,25 +27,62 @@
   // count.value++
 
   import { renderer } from "./src/runtime-dom.js"
+  // ================== 老的是数组 新的是文本
+  // const oldVnode = {
+  //   type: 'div',
+  //   children: [
+  //     {type: 'p', children: '1'},
+  //     {type: 'p', children: '2'},
+  //     {type: 'p', children: '3'},
+  //   ]
+  // }
+
+  // const newVnode = {
+  //   type:"div",
+  //   children: 'text'
+  // }
+
+
+  // ================== 老的文本 新的是数组
+  // const oldVnode = {
+  //   type:"div",
+  //   children: 'text'
+  // }
+  // const newVnode = {
+  //   type: 'div',
+  //   children: [
+  //     {type: 'p', children: '1'},
+  //     {type: 'p', children: '2'},
+  //     {type: 'p', children: '3'},
+  //   ]
+  // }
+
+
+  // ================== 老的是数组 新的也是数组
+  // const oldVnode = {
+  //   type: 'div',
+  //   children: [
+  //     {type: 'p', children: '1'},
+  //     {type: 'p', children: '2'},
+  //     {type: 'p', children: '3'},
+  //   ]
+  // }
+
+  // const newVnode = {
+  //   type: 'div',
+  //   children: [
+  //     {type: 'p', children: '4'},
+  //     {type: 'p', children: '5'},
+  //     {type: 'p', children: '6'},
+  //   ]
+  // }
 
   
-  const oldVnode = {
-    type: 'div',
-    children: [
-      {type: 'p', children: '1'},
-      {type: 'p', children: '2'},
-      {type: 'p', children: '3'},
-    ]
-  }
+  
 
-  const newVnode = {
-    type: 'div',
-    children: [
-      {type: 'p', children: '4'},
-      {type: 'p', children: '5'},
-      {type: 'p', children: '6'},
-    ]
-  }
+
+
+
 
   renderer.render(oldVnode, document.querySelector('#app'))
   setTimeout(() => {
