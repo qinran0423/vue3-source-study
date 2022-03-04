@@ -14,7 +14,7 @@ export function createRenderer(options) {
     patchProps
   } = options
 
-  function patch(n1, n2, container) {
+  function patch(n1, n2, container, anchor) {
 
     // 如果新旧vnode的类型不同，则直接讲旧vnode卸载
     if (n1 && n1.type !== n2.type) {
@@ -26,7 +26,7 @@ export function createRenderer(options) {
     if (typeof type === 'string') {
       // 如果n1不存在 说明是首次  则需要挂载
       if (!n1) {
-        mountElement(n2, container)
+        mountElement(n2, container, anchor)
       } else {
         // n1存在，需要更新
         patchElement(n1, n2, container)
@@ -110,10 +110,13 @@ export function createRenderer(options) {
         for (let i = 0; i < newChildren.length; i++) {
           const newVNode = newChildren[i]
           // 遍历旧的children
+          // 在第一场循环中定义变量find,代表是否在旧的一组子节点中找到可复用的节点
+          let find = false
           for (let j = 0; j < oldChildren.length; j++) {
             const oldVNode = oldChildren[j]
             // 如果找到具有相同的key值得两个节点，说明可以复用，仍然需要调用patch函数更新
             if (newVNode.key === oldVNode.key) {
+              find = true
               patch(oldVNode, newVNode, container)
               if (j < lastIndex) {
                 // 如果当前找到的节点在旧children中的索引小于最大索引值lastIndex
@@ -137,6 +140,33 @@ export function createRenderer(options) {
               }
               break
             }
+            // 如果代码运行到这里， find仍然为false
+            // 说明当前newVNode没有在旧的一组子节点中找到可复用的节点
+            // 则需要新增挂载
+            if (!find) {
+
+              const prevVNode = newChildren[i - 1]
+              let anchor = null
+              if (prevVNode) {
+                anchor = prevVNode.el.nextSibling
+              } else {
+                anchor = container.firstChild
+              }
+            }
+
+            patch(null, newVNode, container, anchor)
+          }
+        }
+
+        for (let i = 0; i < oldChildren.length; i++) {
+          const oldVNode = oldChildren[i]
+
+          const has = newChildren.find(
+            vnode => vnode.key === oldVNode.key
+          )
+
+          if (!has) {
+            unmount(oldVNode)
           }
         }
 
@@ -157,7 +187,7 @@ export function createRenderer(options) {
     }
   }
 
-  function mountElement(vnode, container) {
+  function mountElement(vnode, container, anchor) {
     // 创建Dom元素
     const el = vnode.el = createElement(vnode.type)
 
@@ -173,17 +203,17 @@ export function createRenderer(options) {
       setElementText(el, vnode.children)
     } else if (Array.isArray(vnode.children)) {
       vnode.children.forEach(child => {
-        patch(null, child, el)
+        patch(null, child, el, anchor)
       });
     }
 
-    insert(el, container)
+    insert(el, container, anchor)
   }
 
 
   function render(vnode, container) {
     if (vnode) {
-      patch(container._vnode, vnode, container)
+      patch(container._vnode, vnode, container, null)
     } else {
       if (container._vnode) {
         const el = container._vnode.el
