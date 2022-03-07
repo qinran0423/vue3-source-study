@@ -1784,6 +1784,7 @@ function baseCreateRenderer(
     let e1 = c1.length - 1 // prev ending index
     let e2 = l2 - 1 // next ending index
 
+    // 左侧对比
     // 1. sync from start
     // (a b) c
     // (a b) d e
@@ -1810,6 +1811,7 @@ function baseCreateRenderer(
       i++
     }
 
+    // 右侧对比
     // 2. sync from end
     // a (b c)
     // d e (b c)
@@ -1837,6 +1839,7 @@ function baseCreateRenderer(
       e2--
     }
 
+    //  新的比老的长
     // 3. common sequence + mount
     // (a b)
     // (a b) c
@@ -1867,6 +1870,7 @@ function baseCreateRenderer(
       }
     }
 
+    // 老的比新的长
     // 4. common sequence + unmount
     // (a b) c
     // (a b)
