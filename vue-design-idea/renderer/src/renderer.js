@@ -93,6 +93,7 @@ export function createRenderer(options) {
 
   // 快速diff算法
   function patchKeyedChildren(n1, n2, container) {
+    debugger
     const newChildren = n2.children
     const oldChildren = n1.children
 
@@ -117,6 +118,10 @@ export function createRenderer(options) {
     let oldEnd = oldChildren.length - 1
     // 索引newEnd执行新的一组子节点的最后一个节点
     let newEnd = newChildren.length - 1
+
+    oldVNode = oldChildren[oldEnd]
+    newVNode = newChildren[newEnd]
+
     // while循环从后向前遍历，直到遇到拥有不同key值得节点为止
     while (oldVNode.key === newVNode.key) {
       // 调用patch函数进行更新
@@ -202,6 +207,41 @@ export function createRenderer(options) {
 
       }
 
+      if (moved) {
+        // 如果moved为真，则需要进行DOM的移动操作‘
+        const seq = getSequence(source)
+
+        // s指向最长递增子序列的最后一个元素
+        let s = seq.length - 1
+        // i指向新的一组子节点的最后一个元素
+        let i = count - 1
+
+        // for循环使得递减
+        for (i; i >= 0; i--) {
+          if (i !== seq[s]) {
+            // 如果节点的索引i不等于seq[s]的值，说明该节点需要移动
+            const pos = i + newStart
+            const newVNode = newChildren[pos]
+            // 该节点在新的children中的真实位置索引
+            const nextPos = pos + 1
+            // 锚点
+            const anchor = nextPos < newChildren.length ? newChildren[nextPos].el : null
+            patch(null, newVNode, container, anchor)
+          } else if (i !== seq[s]) {
+            const pos = i + newStart
+            const newVNode = newChildren[pos]
+            // 该节点在新的children中的真实位置索引
+            const nextPos = pos + 1
+            // 锚点
+            const anchor = nextPos < newChildren.length ? newChildren[nextPos].el : null
+            insert(newVNode.el, container, anchor)
+          } else {
+            // 当i === seq[s]时，说明该位置的节点不需要移动
+            s--
+          }
+        }
+      }
+
     }
   }
 
@@ -257,3 +297,43 @@ export function createRenderer(options) {
 
 
 
+function getSequence(arr) {
+  const p = arr.slice();
+  const result = [0];
+  let i, j, u, v, c;
+  const len = arr.length;
+  for (i = 0; i < len; i++) {
+    const arrI = arr[i];
+    if (arrI !== 0) {
+      j = result[result.length - 1];
+      if (arr[j] < arrI) {
+        p[i] = j;
+        result.push(i);
+        continue;
+      }
+      u = 0;
+      v = result.length - 1;
+      while (u < v) {
+        c = (u + v) >> 1;
+        if (arr[result[c]] < arrI) {
+          u = c + 1;
+        } else {
+          v = c;
+        }
+      }
+      if (arrI < arr[result[u]]) {
+        if (u > 0) {
+          p[i] = result[u - 1];
+        }
+        result[u] = i;
+      }
+    }
+  }
+  u = result.length;
+  v = result[u - 1];
+  while (u-- > 0) {
+    result[u] = v;
+    v = p[v];
+  }
+  return result;
+}

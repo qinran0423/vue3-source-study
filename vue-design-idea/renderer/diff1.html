@@ -79,24 +79,47 @@
   // }
 
   // 2.
+  // const oldVnode = {
+  //   type: 'div',
+  //   children: [
+  //     {type: 'p', key: 'a',  children: 'a'},
+  //     {type: 'p', key: 'b',  children: 'b'},
+  //     {type: 'p', key: 'c',  children: 'c'},
+  //   ]
+  // }
+
+  // const newVnode = {
+  //   type: 'div',
+  //   children: [
+  //     {type: 'p', key: 'c',  children: 'c'},
+  //     {type: 'p', key: 'b',  children: 'b'},
+  //     {type: 'p', key: 'a',  children: 'a'},
+  //   ]
+  // }
+
   const oldVnode = {
     type: 'div',
     children: [
-      {type: 'p', key: 'a',  children: 'a'},
-      {type: 'p', key: 'b',  children: 'b'},
-      {type: 'p', key: 'c',  children: 'c'},
+      {type: 'p', key: '1',  children: '1'},
+      {type: 'p', key: '2',  children: '2'},
+      {type: 'p', key: '3',  children: '3'},
+      {type: 'p', key: '4',  children: '4'},
+      {type: 'p', key: '6',  children: '6'},
+      {type: 'p', key: '5',  children: '5'},
     ]
   }
 
   const newVnode = {
     type: 'div',
     children: [
-      {type: 'p', key: 'c',  children: 'c'},
-      {type: 'p', key: 'b',  children: 'b'},
-      {type: 'p', key: 'a',  children: 'a'},
+      {type: 'p', key: '1',  children: '1'},
+      {type: 'p', key: '3',  children: '3'},
+      {type: 'p', key: '4',  children: '4'},
+      {type: 'p', key: '2',  children: '2'},
+      {type: 'p', key: '7',  children: '7'},
+      {type: 'p', key: '5',  children: '5'},
     ]
   }
-
   
 
 
