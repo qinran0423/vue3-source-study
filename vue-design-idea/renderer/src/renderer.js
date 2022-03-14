@@ -1,7 +1,35 @@
-
+import { effect, reactive } from '../../reactivity/effect.js';
 export function shouldSetAsProps(el, key, value) {
   if (key === 'form' && el.tagName === 'INPUT') return false
   return key in el
+}
+
+
+// 任务缓存队列，用一个Set数据结构来表示
+const queue = new Set()
+// 一个标志， 代表是否正在刷新任务队列
+let isFlushing = false
+
+const p = Promise.resolve()
+
+function queueJob(job) {
+  queue.add(job)
+  // 如果还没有开始刷新队列，则刷新之
+  if (!isFlushing) {
+    // 将该标志设置成true, 避免重复刷新
+    isFlushing = true
+    // 在微任务中刷新换从队列
+    p.then(() => {
+      try {
+        // 执行任务队列的任务
+        queue.forEach(job => job())
+      } finally {
+        isFlushing = false
+        queue.length = 0
+      }
+    })
+
+  }
 }
 
 
@@ -33,9 +61,33 @@ export function createRenderer(options) {
       }
     } else if (typeof type === 'object') {
       // 如果n2.type是对象，则它描述的事组件
+      if (!n1) {
+        // 挂载组件
+        mountComponent(n2, container, anchor)
+      } else {
+        // 更新组件
+        patchComponent(n1, n2, anchor)
+      }
     }
   }
 
+
+  function mountComponent(vnode, container, anchor) {
+    // 通过vnode获取组件的选项对象
+    const componentOptions = vnode.type
+    // 获取组件的render
+    const { render, data } = componentOptions
+    const state = reactive(data())
+    // 执行渲染函数，获取组件要渲染的内容，
+    effect(() => {
+      const subTree = render.call(state, state)
+      // 最后执行patch 来挂载组件所描述的内容
+      patch(null, subTree, container, anchor)
+    }, {
+      scheudler: queueJob
+    })
+
+  }
 
   function patchElement(n1, n2, container) {
     const el = n2.el = n1.el
