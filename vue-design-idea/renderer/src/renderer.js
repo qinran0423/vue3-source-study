@@ -1,4 +1,4 @@
-import { effect, reactive } from '../../reactivity/effect.js';
+import { effect, reactive, shallowReactive } from '../../reactivity/effect.js';
 export function shouldSetAsProps(el, key, value) {
   if (key === 'form' && el.tagName === 'INPUT') return false
   return key in el
@@ -71,22 +71,125 @@ export function createRenderer(options) {
     }
   }
 
+  function patchComponent(n1, n2, anchor) {
+    // 获取组件实例，n1.component, 同时，让新的组件虚拟节点n2.component也指向组件实例
+    const instance = (n2.component = n1.component)
+
+    const { props } = instance
+
+    if (hasPropsChanged(n1.props, n2.props)) {
+      // 调用resolveProps 获取新的props数据
+      const [nextProps] = resolveProps(n2.type.props, n2.props)
+      // 更新props
+      for (const k in nextProps) {
+        props[k] = nextProps[k]
+      }
+
+      for (const k in props) {
+        if (!(k in nextProps)) delete props[k]
+      }
+    }
+  }
+
+
+  function hasPropsChanged(prevProps, nextProps) {
+    const nextKeys = Object.keys(nextProps)
+    // 如果新旧props的数量发生了变化，则说明发生了变化
+    if (nextKeys.length !== Object.keys(prevProps).length) {
+      return true
+    }
+
+    for (let i = 0; i < nextKeys.length; i++) {
+      const key = nextKeys[key]
+      if (nextProps[key] !== prevProps[key]) return true
+    }
+
+    return false
+  }
 
   function mountComponent(vnode, container, anchor) {
     // 通过vnode获取组件的选项对象
     const componentOptions = vnode.type
     // 获取组件的render
-    const { render, data } = componentOptions
+    const { render, data, props: propsOption } = componentOptions
     const state = reactive(data())
+
+
+    const [props, attrs] = resolveProps(propsOption, vnode.props)
+
+    // 定义一个组件实例，包含组件有关的状态信息
+    const instance = {
+      state, // 组件自身的状态数据
+      props: shallowReactive(props),
+      isMounted: false, // 表示组件是否已经挂载 初始false
+      subTree: null // 组件所渲染内容 子树
+    }
+
+    // 将组件实例设置到vnode上，用于后续更新
+    vnode.component = instance
+
+    // 创建渲染上下文对象，实现组件实例的代理
+    const renderContext = new Proxy(instance, {
+      get(t, k, r) {
+        const { state, props } = t
+        // 先从组件自身读取
+        if (state && k in state) {
+          return state[k]
+        } else if (k in props) { // 如果组件自身没有找到， 则尝试从props中读取
+          return props[k]
+        } else {
+          console.error('不存在');
+        }
+      },
+      set(t, k, v, r) {
+        const { state, props } = t
+        if (state && k in state) {
+          state[k] = v
+        } else if (k in props) {
+          props[k] = v
+        } else {
+          console.error('不存在');
+        }
+
+      }
+
+    })
+
+
     // 执行渲染函数，获取组件要渲染的内容，
     effect(() => {
+      // 调用组件的渲染函数，获得子树
       const subTree = render.call(state, state)
-      // 最后执行patch 来挂载组件所描述的内容
-      patch(null, subTree, container, anchor)
+      // 检查组件是否已经被挂载
+      if (!instance.isMounted) {
+        // 最后执行patch 来挂载组件所描述的内容
+        patch(null, subTree, container, anchor)
+        instance.isMounted = true
+      } else {
+        // 使用新的子树与上一个渲染的子树进行打补丁操作
+        patch(instance.subTree, subTree, container, anchor)
+      }
+      instance.subTree = subTree
     }, {
       scheudler: queueJob
     })
 
+  }
+
+  // resolveProps 函数用于解析组件props和attrs数据
+  function resolveProps(options, propsData) {
+    const props = {}
+    const attrs = {}
+
+    for (const key in propsData) {
+      if (key in options) {
+        props[key] = propsData[key]
+      } else {
+        attrs[key] = propsData[key]
+      }
+    }
+
+    return [props, attrs]
   }
 
   function patchElement(n1, n2, container) {

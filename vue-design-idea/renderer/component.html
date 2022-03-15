@@ -21,6 +21,9 @@
           foo: 'hello world'
         }
       },
+      props: {
+        title: String
+      },
       render() {
         return {
           type: 'div',
@@ -28,12 +31,15 @@
         }
       }
       
-      
     }
 
 
     const vnode = {
       type: MyComponent,
+      props: {
+        title: 'A big Title',
+        other: this.val
+      }
     }
 
 
