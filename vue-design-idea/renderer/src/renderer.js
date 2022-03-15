@@ -1,4 +1,4 @@
-import { effect, reactive, shallowReactive } from '../../reactivity/effect.js';
+import { effect, reactive } from '../../reactivity/effect.js';
 export function shouldSetAsProps(el, key, value) {
   if (key === 'form' && el.tagName === 'INPUT') return false
   return key in el
@@ -111,18 +111,29 @@ export function createRenderer(options) {
     // 通过vnode获取组件的选项对象
     const componentOptions = vnode.type
     // 获取组件的render
-    const { render, data, props: propsOption } = componentOptions
-    const state = reactive(data())
-
-
+    const { render, data, props: propsOption, setup } = componentOptions
+    const state = data ? reactive(data()) : null
     const [props, attrs] = resolveProps(propsOption, vnode.props)
 
     // 定义一个组件实例，包含组件有关的状态信息
     const instance = {
       state, // 组件自身的状态数据
-      props: shallowReactive(props),
+      props: props, // TODO  shallowReactive(props)
       isMounted: false, // 表示组件是否已经挂载 初始false
       subTree: null // 组件所渲染内容 子树
+    }
+
+    const setupContext = { attrs }
+    // TODO shallowReadonly(instance.props)
+    const setupResult = setup(instance.props, setupContext)
+    // setupState 用来存储由setup返回的数据
+    let setupState = null
+
+    if (typeof setupResult === 'function') {
+      if (render) console.error('冲突');
+      render = setupResult
+    } else {
+      setupState = setupResult
     }
 
     // 将组件实例设置到vnode上，用于后续更新
@@ -137,6 +148,8 @@ export function createRenderer(options) {
           return state[k]
         } else if (k in props) { // 如果组件自身没有找到， 则尝试从props中读取
           return props[k]
+        } else if (setupState && k in setupState) {
+          return setupState[k]
         } else {
           console.error('不存在');
         }
@@ -146,7 +159,7 @@ export function createRenderer(options) {
         if (state && k in state) {
           state[k] = v
         } else if (k in props) {
-          props[k] = v
+          console.error('不允许');
         } else {
           console.error('不存在');
         }
@@ -159,7 +172,7 @@ export function createRenderer(options) {
     // 执行渲染函数，获取组件要渲染的内容，
     effect(() => {
       // 调用组件的渲染函数，获得子树
-      const subTree = render.call(state, state)
+      const subTree = render.call(renderContext, state)
       // 检查组件是否已经被挂载
       if (!instance.isMounted) {
         // 最后执行patch 来挂载组件所描述的内容
