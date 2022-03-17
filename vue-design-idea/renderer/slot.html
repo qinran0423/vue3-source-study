@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import {renderer} from './src/runtime-dom.js'
+    import {reactive} from '../reactivity/effect.js'
+    
+    const Comp = {
+      setup() {
+
+      },
+      render() {
+        return [
+          {
+            type: 'header',
+            children: [this.$slots.header()]
+          },
+          {
+            type: 'div',
+            children: [this.$slots.body()]
+          },
+          {
+            type: 'footer',
+            children: [this.$slots.footer()]
+          },
+        ]
+      }
+    }
+
+
+    const vnode = {
+      type: Comp,
+      children: {
+        header() {
+          return {type: 'h1', children: '我是标题'}
+        },
+        body() {
+          return {type: 'section', children: '我是内容'}
+        },
+        footer() {
+          return {type: 'p', children: '我是注脚'}
+        }
+      }
+    }
+
+
+    const app = document.getElementById('app')
+
+    renderer.render(vnode, app)
+  </script>
+</body>
+
+</html>

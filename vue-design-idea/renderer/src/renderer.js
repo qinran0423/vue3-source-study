@@ -33,6 +33,8 @@ function queueJob(job) {
 }
 
 
+let currentInstance = null
+
 
 export function createRenderer(options) {
   const {
@@ -115,18 +117,42 @@ export function createRenderer(options) {
     const state = data ? reactive(data()) : null
     const [props, attrs] = resolveProps(propsOption, vnode.props)
 
+    // 直接使用编译好的vnode.children对象作为slots对象即可
+    const slots = vnode.children || {}
     // 定义一个组件实例，包含组件有关的状态信息
     const instance = {
       state, // 组件自身的状态数据
       props: props, // TODO  shallowReactive(props)
       isMounted: false, // 表示组件是否已经挂载 初始false
-      subTree: null // 组件所渲染内容 子树
+      subTree: null, // 组件所渲染内容 子树
+      slots,
+      mounted: []
     }
 
-    const setupContext = { attrs }
+
+    function setCurrentInstance(instance) {
+      currentInstance = instance
+    }
+
+    function emit(event, ...payload) {
+      // 根据约定对事件名称进行处理，  change => onChange
+      const eventName = `on${event[0].toUpperCase() + event.slice(1)}`
+      const handler = instance.props[eventName]
+      if (handler) {
+        handler(...payload)
+      } else {
+        console.error('事件不存在');
+      }
+    }
+
+
+
+    const setupContext = { attrs, emit, slots }
+    setCurrentInstance(instance)
     // TODO shallowReadonly(instance.props)
     const setupResult = setup(instance.props, setupContext)
     // setupState 用来存储由setup返回的数据
+    setCurrentInstance(null)
     let setupState = null
 
     if (typeof setupResult === 'function') {
@@ -142,7 +168,7 @@ export function createRenderer(options) {
     // 创建渲染上下文对象，实现组件实例的代理
     const renderContext = new Proxy(instance, {
       get(t, k, r) {
-        const { state, props } = t
+        const { state, props, slots } = t
         // 先从组件自身读取
         if (state && k in state) {
           return state[k]
@@ -150,9 +176,13 @@ export function createRenderer(options) {
           return props[k]
         } else if (setupState && k in setupState) {
           return setupState[k]
+        } else if (k === '$slots') {
+          return slots
         } else {
           console.error('不存在');
         }
+
+
       },
       set(t, k, v, r) {
         const { state, props } = t
@@ -178,6 +208,8 @@ export function createRenderer(options) {
         // 最后执行patch 来挂载组件所描述的内容
         patch(null, subTree, container, anchor)
         instance.isMounted = true
+
+        instance.mounted && instance.mounted.forEach(hook => hook.call(renderContext))
       } else {
         // 使用新的子树与上一个渲染的子树进行打补丁操作
         patch(instance.subTree, subTree, container, anchor)
@@ -195,7 +227,7 @@ export function createRenderer(options) {
     const attrs = {}
 
     for (const key in propsData) {
-      if (key in options) {
+      if ((options && key in options) || key.startsWith('on')) {
         props[key] = propsData[key]
       } else {
         attrs[key] = propsData[key]
@@ -464,6 +496,14 @@ export function createRenderer(options) {
 }
 
 
+
+export function onMounted(fn) {
+  if (currentInstance) {
+    currentInstance.mounted.push(fn)
+  } else {
+    console.error('onMounted函数只能在setup中调用');
+  }
+}
 
 function getSequence(arr) {
   const p = arr.slice();
