@@ -14,15 +14,15 @@ nr build core --formats cjs
 ```
 */
 
-const fs = require('fs-extra')
-const path = require('path')
-const chalk = require('chalk')
-const execa = require('execa')
-const { gzipSync } = require('zlib')
-const { compress } = require('brotli')
-const { targets: allTargets, fuzzyMatchTarget } = require('./utils')
+const fs = require("fs-extra")
+const path = require("path")
+const chalk = require("chalk")
+const execa = require("execa")
+const { gzipSync } = require("zlib")
+const { compress } = require("brotli")
+const { targets: allTargets, fuzzyMatchTarget } = require("./utils")
 
-const args = require('minimist')(process.argv.slice(2))
+const args = require("minimist")(process.argv.slice(2))
 const targets = args._
 const formats = args.formats || args.f
 const devOnly = args.devOnly || args.d
@@ -31,14 +31,14 @@ const sourceMap = args.sourcemap || args.s
 const isRelease = args.release
 const buildTypes = args.t || args.types || isRelease
 const buildAllMatching = args.all || args.a
-const commit = execa.sync('git', ['rev-parse', 'HEAD']).stdout.slice(0, 7)
+const commit = execa.sync("git", ["rev-parse", "HEAD"]).stdout.slice(0, 7)
 
 run()
 
 async function run() {
   if (isRelease) {
     // remove build cache for release builds to avoid outdated enum values
-    await fs.remove(path.resolve(__dirname, '../node_modules/.rts2_cache'))
+    await fs.remove(path.resolve(__dirname, "../node_modules/.rts2_cache"))
   }
   if (!targets.length) {
     await buildAll(allTargets)
@@ -49,10 +49,12 @@ async function run() {
   }
 }
 
+// 并行编译
 async function buildAll(targets) {
-  await runParallel(require('os').cpus().length, targets, build)
+  await runParallel(require("os").cpus().length, targets, build)
 }
 
+//maxConcurrency最大并发数
 async function runParallel(maxConcurrency, source, iteratorFn) {
   const ret = []
   const executing = []
@@ -76,6 +78,7 @@ async function build(target) {
   const pkg = require(`${pkgDir}/package.json`)
 
   // if this is a full build (no specific targets), ignore private packages
+  // 只编译公共包
   if ((isRelease || !targets.length) && pkg.private) {
     return
   }
@@ -87,12 +90,13 @@ async function build(target) {
 
   const env =
     (pkg.buildOptions && pkg.buildOptions.env) ||
-    (devOnly ? 'development' : 'production')
+    (devOnly ? "development" : "production")
+  // 执行rollup命令,运行rollup打包工具
   await execa(
-    'rollup',
+    "rollup",
     [
-      '-c',
-      '--environment',
+      "-c",
+      "--environment",
       [
         `COMMIT:${commit}`,
         `NODE_ENV:${env}`,
@@ -103,9 +107,9 @@ async function build(target) {
         sourceMap ? `SOURCE_MAP:true` : ``
       ]
         .filter(Boolean)
-        .join(',')
+        .join(",")
     ],
-    { stdio: 'inherit' }
+    { stdio: "inherit" }
   )
 
   if (buildTypes && pkg.types) {
@@ -115,7 +119,7 @@ async function build(target) {
     )
 
     // build types
-    const { Extractor, ExtractorConfig } = require('@microsoft/api-extractor')
+    const { Extractor, ExtractorConfig } = require("@microsoft/api-extractor")
 
     const extractorConfigPath = path.resolve(pkgDir, `api-extractor.json`)
     const extractorConfig =
@@ -127,17 +131,17 @@ async function build(target) {
 
     if (extractorResult.succeeded) {
       // concat additional d.ts to rolled-up dts
-      const typesDir = path.resolve(pkgDir, 'types')
+      const typesDir = path.resolve(pkgDir, "types")
       if (await fs.exists(typesDir)) {
         const dtsPath = path.resolve(pkgDir, pkg.types)
-        const existing = await fs.readFile(dtsPath, 'utf-8')
+        const existing = await fs.readFile(dtsPath, "utf-8")
         const typeFiles = await fs.readdir(typesDir)
         const toAdd = await Promise.all(
-          typeFiles.map(file => {
-            return fs.readFile(path.resolve(typesDir, file), 'utf-8')
+          typeFiles.map((file) => {
+            return fs.readFile(path.resolve(typesDir, file), "utf-8")
           })
         )
-        await fs.writeFile(dtsPath, existing + '\n' + toAdd.join('\n'))
+        await fs.writeFile(dtsPath, existing + "\n" + toAdd.join("\n"))
       }
       console.log(
         chalk.bold(chalk.green(`API Extractor completed successfully.`))
@@ -155,7 +159,7 @@ async function build(target) {
 }
 
 function checkAllSizes(targets) {
-  if (devOnly || (formats && !formats.includes('global'))) {
+  if (devOnly || (formats && !formats.includes("global"))) {
     return
   }
   console.log()
@@ -168,7 +172,7 @@ function checkAllSizes(targets) {
 function checkSize(target) {
   const pkgDir = path.resolve(`packages/${target}`)
   checkFileSize(`${pkgDir}/dist/${target}.global.prod.js`)
-  if (!formats || formats.includes('global-runtime')) {
+  if (!formats || formats.includes("global-runtime")) {
     checkFileSize(`${pkgDir}/dist/${target}.runtime.global.prod.js`)
   }
 }
@@ -178,11 +182,11 @@ function checkFileSize(filePath) {
     return
   }
   const file = fs.readFileSync(filePath)
-  const minSize = (file.length / 1024).toFixed(2) + 'kb'
+  const minSize = (file.length / 1024).toFixed(2) + "kb"
   const gzipped = gzipSync(file)
-  const gzippedSize = (gzipped.length / 1024).toFixed(2) + 'kb'
+  const gzippedSize = (gzipped.length / 1024).toFixed(2) + "kb"
   const compressed = compress(file)
-  const compressedSize = (compressed.length / 1024).toFixed(2) + 'kb'
+  const compressedSize = (compressed.length / 1024).toFixed(2) + "kb"
   console.log(
     `${chalk.gray(
       chalk.bold(path.basename(filePath))

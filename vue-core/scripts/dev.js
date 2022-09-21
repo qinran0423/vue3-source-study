@@ -17,34 +17,35 @@ __DEV__=false nr dev
 */
 
 // 执行命令行脚本
-const execa = require('execa')
-const { fuzzyMatchTarget } = require('./utils')
+const execa = require("execa")
+const { fuzzyMatchTarget } = require("./utils")
 // 获取传入的参数
-const args = require('minimist')(process.argv.slice(2))
+const args = require("minimist")(process.argv.slice(2))
 // 设置打包目标，默认什么都也不传会打包vue
-const target = args._.length ? fuzzyMatchTarget(args._)[0] : 'vue'
+const target = args._.length ? fuzzyMatchTarget(args._)[0] : "vue"
 // 设置打包格式
 const formats = args.formats || args.f
 
 const sourceMap = args.sourcemap || args.s
-const commit = execa.sync('git', ['rev-parse', 'HEAD']).stdout.slice(0, 7)
+const commit = execa.sync("git", ["rev-parse", "HEAD"]).stdout.slice(0, 7)
 
+console.log(target, formats, sourceMap, commit)
 // 执行rollup
 execa(
-  'rollup',
+  "rollup",
   [
-    '-wc',
-    '--environment',
+    "-wc",
+    "--environment",
     [
       `COMMIT:${commit}`,
       `TARGET:${target}`,
-      `FORMATS:${formats || 'global'}`,
+      `FORMATS:${formats || "global"}`,
       sourceMap ? `SOURCE_MAP:true` : ``
     ]
       .filter(Boolean)
-      .join(',')
+      .join(",")
   ],
   {
-    stdio: 'inherit'
+    stdio: "inherit"
   }
 )

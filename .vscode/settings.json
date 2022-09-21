@@ -1,4 +1,4 @@
 {
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "jestrunner.jestPath": "node_modules/jest/bin/jest.js"
 }

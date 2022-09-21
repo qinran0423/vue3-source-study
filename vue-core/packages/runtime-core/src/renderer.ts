@@ -1184,7 +1184,7 @@ function baseCreateRenderer(
   // 挂载组件
   const mountComponent: MountComponentFn = (
     initialVNode,
-    container,
+    container, 
     anchor,
     parentComponent,
     parentSuspense,
@@ -1249,7 +1249,7 @@ function baseCreateRenderer(
       }
       return
     }
-    // 创建更新机制
+    // 创建更新机制 设置并运行带副作用的渲染函数 
     setupRenderEffect(
       instance,
       initialVNode,
@@ -1379,6 +1379,7 @@ function baseCreateRenderer(
             startMeasure(instance, `render`)
           }
           // 执行当前组件实例的render函数获取vnode
+          // 渲染组件生成子树vnode
           const subTree = (instance.subTree = renderComponentRoot(instance))
           if (__DEV__) {
             endMeasure(instance, `render`)
@@ -1387,6 +1388,7 @@ function baseCreateRenderer(
             startMeasure(instance, `patch`)
           }
           // 首次patch, 将创建这些子元素
+          // 把子树vnode 挂载到container中
           patch(
             null,
             subTree,
@@ -1399,6 +1401,7 @@ function baseCreateRenderer(
           if (__DEV__) {
             endMeasure(instance, `patch`)
           }
+          // 保存渲染生成的子树根DOM节点
           initialVNode.el = subTree.el
         }
         // mounted hook
@@ -1449,8 +1452,7 @@ function baseCreateRenderer(
 
         // #2458: deference mount-only object parameters to prevent memleaks
         initialVNode = container = anchor = null as any
-      } else {
-        // 更新组件的流程开始
+      } else { // 更新组件的流程开始
         // updateComponent
         // This is triggered by mutation of component's own state (next: null)
         // OR parent calling processComponent (next: VNode)

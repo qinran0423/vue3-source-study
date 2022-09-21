@@ -1,19 +1,19 @@
 // @ts-check
-import path from 'path'
-import ts from 'rollup-plugin-typescript2'
-import replace from '@rollup/plugin-replace'
-import json from '@rollup/plugin-json'
+import path from "path"
+import ts from "rollup-plugin-typescript2"
+import replace from "@rollup/plugin-replace"
+import json from "@rollup/plugin-json"
 
 if (!process.env.TARGET) {
-  throw new Error('TARGET package must be specified via --environment flag.')
+  throw new Error("TARGET package must be specified via --environment flag.")
 }
 
-const masterVersion = require('./package.json').version
+const masterVersion = require("./package.json").version
 // 获取包的目录结构   ./packages
-const packagesDir = path.resolve(__dirname, 'packages')
+const packagesDir = path.resolve(__dirname, "packages")
 // 包名称 ./packages/vue
 const packageDir = path.resolve(packagesDir, process.env.TARGET)
-const resolve = p => path.resolve(packageDir, p)
+const resolve = (p) => path.resolve(packageDir, p)
 const pkg = require(resolve(`package.json`))
 const packageOptions = pkg.buildOptions || {}
 const name = packageOptions.filename || path.basename(packageDir)
@@ -23,11 +23,11 @@ let hasTSChecked = false
 
 // 打包的选项
 const outputConfigs = {
-  'esm-bundler': {
+  "esm-bundler": {
     file: resolve(`dist/${name}.esm-bundler.js`),
     format: `es`
   },
-  'esm-browser': {
+  "esm-browser": {
     file: resolve(`dist/${name}.esm-browser.js`),
     format: `es`
   },
@@ -40,33 +40,33 @@ const outputConfigs = {
     format: `iife`
   },
   // runtime-only builds, for main "vue" package only
-  'esm-bundler-runtime': {
+  "esm-bundler-runtime": {
     file: resolve(`dist/${name}.runtime.esm-bundler.js`),
     format: `es`
   },
-  'esm-browser-runtime': {
+  "esm-browser-runtime": {
     file: resolve(`dist/${name}.runtime.esm-browser.js`),
-    format: 'es'
+    format: "es"
   },
-  'global-runtime': {
+  "global-runtime": {
     file: resolve(`dist/${name}.runtime.global.js`),
-    format: 'iife'
+    format: "iife"
   }
 }
 
-const defaultFormats = ['esm-bundler', 'cjs']
-const inlineFormats = process.env.FORMATS && process.env.FORMATS.split(',')
+const defaultFormats = ["esm-bundler", "cjs"]
+const inlineFormats = process.env.FORMATS && process.env.FORMATS.split(",")
 const packageFormats = inlineFormats || packageOptions.formats || defaultFormats
 const packageConfigs = process.env.PROD_ONLY
   ? []
-  : packageFormats.map(format => createConfig(format, outputConfigs[format]))
+  : packageFormats.map((format) => createConfig(format, outputConfigs[format]))
 
-if (process.env.NODE_ENV === 'production') {
-  packageFormats.forEach(format => {
+if (process.env.NODE_ENV === "production") {
+  packageFormats.forEach((format) => {
     if (packageOptions.prod === false) {
       return
     }
-    if (format === 'cjs') {
+    if (format === "cjs") {
       packageConfigs.push(createProductionConfig(format))
     }
     if (/^(global|esm-browser)(-runtime)?/.test(format)) {
@@ -79,20 +79,20 @@ export default packageConfigs
 
 function createConfig(format, output, plugins = []) {
   if (!output) {
-    console.log(require('chalk').yellow(`invalid format: "${format}"`))
+    console.log(require("chalk").yellow(`invalid format: "${format}"`))
     process.exit(1)
   }
 
   const isProductionBuild =
-    process.env.__DEV__ === 'false' || /\.prod\.js$/.test(output.file)
+    process.env.__DEV__ === "false" || /\.prod\.js$/.test(output.file)
   const isBundlerESMBuild = /esm-bundler/.test(format)
   const isBrowserESMBuild = /esm-browser/.test(format)
-  const isNodeBuild = format === 'cjs'
+  const isNodeBuild = format === "cjs"
   const isGlobalBuild = /global/.test(format)
-  const isCompatPackage = pkg.name === '@vue/compat'
+  const isCompatPackage = pkg.name === "@vue/compat"
   const isCompatBuild = !!packageOptions.compat
 
-  output.exports = isCompatPackage ? 'auto' : 'named'
+  output.exports = isCompatPackage ? "auto" : "named"
   output.sourcemap = !!process.env.SOURCE_MAP
   output.externalLiveBindings = false
 
@@ -104,16 +104,16 @@ function createConfig(format, output, plugins = []) {
     pkg.types && process.env.TYPES != null && !hasTSChecked
 
   const tsPlugin = ts({
-    check: process.env.NODE_ENV === 'production' && !hasTSChecked,
-    tsconfig: path.resolve(__dirname, 'tsconfig.json'),
-    cacheRoot: path.resolve(__dirname, 'node_modules/.rts2_cache'),
+    check: process.env.NODE_ENV === "production" && !hasTSChecked,
+    tsconfig: path.resolve(__dirname, "tsconfig.json"),
+    cacheRoot: path.resolve(__dirname, "node_modules/.rts2_cache"),
     tsconfigOverride: {
       compilerOptions: {
         sourceMap: output.sourcemap,
         declaration: shouldEmitDeclarations,
         declarationMap: shouldEmitDeclarations
       },
-      exclude: ['**/__tests__', 'test-dts']
+      exclude: ["**/__tests__", "test-dts"]
     }
   })
   // we only need to check TS and generate declarations once for each build.
@@ -132,13 +132,15 @@ function createConfig(format, output, plugins = []) {
       : `src/esm-index.ts`
   }
 
+  // 打包过程中需要排除的第三方的库
   let external = []
 
   if (isGlobalBuild || isBrowserESMBuild || isCompatPackage) {
     if (!packageOptions.enableNonBrowserBranches) {
       // normal browser builds - non-browser only imports are tree-shaken,
       // they are only listed here to suppress warnings.
-      external = ['source-map', '@babel/parser', 'estree-walker']
+      // 阻止编译时的警告
+      external = ["source-map", "@babel/parser", "estree-walker"]
     }
   } else {
     // Node / esm-bundler builds.
@@ -146,40 +148,40 @@ function createConfig(format, output, plugins = []) {
     external = [
       ...Object.keys(pkg.dependencies || {}),
       ...Object.keys(pkg.peerDependencies || {}),
-      ...['path', 'url', 'stream'] // for @vue/compiler-sfc / server-renderer
+      ...["path", "url", "stream"] // for @vue/compiler-sfc / server-renderer
     ]
   }
 
   // we are bundling forked consolidate.js in compiler-sfc which dynamically
   // requires a ton of template engines which should be ignored.
   let cjsIgnores = []
-  if (pkg.name === '@vue/compiler-sfc') {
+  if (pkg.name === "@vue/compiler-sfc") {
     cjsIgnores = [
-      ...Object.keys(require('@vue/consolidate/package.json').devDependencies),
-      'vm',
-      'crypto',
-      'react-dom/server',
-      'teacup/lib/express',
-      'arc-templates/dist/es5',
-      'then-pug',
-      'then-jade'
+      ...Object.keys(require("@vue/consolidate/package.json").devDependencies),
+      "vm",
+      "crypto",
+      "react-dom/server",
+      "teacup/lib/express",
+      "arc-templates/dist/es5",
+      "then-pug",
+      "then-jade"
     ]
   }
 
   const nodePlugins =
-    (format === 'cjs' && Object.keys(pkg.devDependencies || {}).length) ||
+    (format === "cjs" && Object.keys(pkg.devDependencies || {}).length) ||
     packageOptions.enableNonBrowserBranches
       ? [
           // @ts-ignore
-          require('@rollup/plugin-commonjs')({
+          require("@rollup/plugin-commonjs")({
             sourceMap: false,
             ignore: cjsIgnores
           }),
-          ...(format === 'cjs'
+          ...(format === "cjs"
             ? []
             : // @ts-ignore
-              [require('rollup-plugin-polyfill-node')()]),
-          require('@rollup/plugin-node-resolve').nodeResolve()
+              [require("rollup-plugin-polyfill-node")()]),
+          require("@rollup/plugin-node-resolve").nodeResolve()
         ]
       : []
 
@@ -251,9 +253,9 @@ function createReplacePlugin(
     // for compiler-sfc browser build inlined deps
     ...(isBrowserESMBuild
       ? {
-          'process.env': '({})',
-          'process.platform': '""',
-          'process.stdout': 'null'
+          "process.env": "({})",
+          "process.platform": '""',
+          "process.stdout": "null"
         }
       : {}),
 
@@ -268,16 +270,16 @@ function createReplacePlugin(
       : false,
     ...(isProduction && isBrowserBuild
       ? {
-          'context.onError(': `/*#__PURE__*/ context.onError(`,
-          'emitError(': `/*#__PURE__*/ emitError(`,
-          'createCompilerError(': `/*#__PURE__*/ createCompilerError(`,
-          'createDOMCompilerError(': `/*#__PURE__*/ createDOMCompilerError(`
+          "context.onError(": `/*#__PURE__*/ context.onError(`,
+          "emitError(": `/*#__PURE__*/ emitError(`,
+          "createCompilerError(": `/*#__PURE__*/ createCompilerError(`,
+          "createDOMCompilerError(": `/*#__PURE__*/ createDOMCompilerError(`
         }
       : {})
   }
   // allow inline overrides like
   //__RUNTIME_COMPILE__=true yarn build runtime-core
-  Object.keys(replacements).forEach(key => {
+  Object.keys(replacements).forEach((key) => {
     if (key in process.env) {
       replacements[key] = process.env[key]
     }
@@ -297,11 +299,11 @@ function createProductionConfig(format) {
 }
 
 function createMinifiedConfig(format) {
-  const { terser } = require('rollup-plugin-terser')
+  const { terser } = require("rollup-plugin-terser")
   return createConfig(
     format,
     {
-      file: outputConfigs[format].file.replace(/\.js$/, '.prod.js'),
+      file: outputConfigs[format].file.replace(/\.js$/, ".prod.js"),
       format: outputConfigs[format].format
     },
     [
