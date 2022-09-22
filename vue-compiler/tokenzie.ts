@@ -1,3 +1,5 @@
+import { Token, TokenTag, TokenText, TokenType } from "./ast"
+
 enum STATE {
   INITIAL,
   TAGOPEN,
@@ -9,12 +11,6 @@ enum STATE {
 
 function isAlpha(char) {
   return (char >= "a" && char <= "z") || (char >= "A" && char <= "Z")
-}
-
-interface Token {
-  type: string
-  name?: string
-  content?: string
 }
 
 export function tokenzie(code: string) {
@@ -54,7 +50,7 @@ export function tokenzie(code: string) {
         } else if (char === ">") {
           currentState = STATE.INITIAL
           tokens.push({
-            type: "tag",
+            type: TokenType.TAG,
             name: chars.join("")
           })
           chars.length = 0
@@ -68,7 +64,7 @@ export function tokenzie(code: string) {
         } else if (char === "<") {
           currentState = STATE.TAGOPEN
           tokens.push({
-            type: "text",
+            type: TokenType.TEXT,
             content: chars.join("")
           })
           chars.length = 0
@@ -89,7 +85,7 @@ export function tokenzie(code: string) {
         } else if (char === ">") {
           currentState = STATE.INITIAL
           tokens.push({
-            type: "tagEnd",
+            type: TokenType.TAGEND,
             name: chars.join("")
           })
 
