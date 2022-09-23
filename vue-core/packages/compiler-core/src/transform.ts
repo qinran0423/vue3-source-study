@@ -1,4 +1,4 @@
-import { TransformOptions } from './options'
+import { TransformOptions } from "./options"
 import {
   RootNode,
   NodeTypes,
@@ -18,7 +18,7 @@ import {
   createVNodeCall,
   ConstantTypes,
   ArrayExpression
-} from './ast'
+} from "./ast"
 import {
   isString,
   isArray,
@@ -28,17 +28,17 @@ import {
   EMPTY_OBJ,
   capitalize,
   camelize
-} from '@vue/shared'
-import { defaultOnError, defaultOnWarn } from './errors'
+} from "@vue/shared"
+import { defaultOnError, defaultOnWarn } from "./errors"
 import {
   TO_DISPLAY_STRING,
   FRAGMENT,
   helperNameMap,
   CREATE_COMMENT
-} from './runtimeHelpers'
-import { isVSlot, makeBlock } from './utils'
-import { hoistStatic, isSingleElementRoot } from './transforms/hoistStatic'
-import { CompilerCompatOptions } from './compat/compatConfig'
+} from "./runtimeHelpers"
+import { isVSlot, makeBlock } from "./utils"
+import { hoistStatic, isSingleElementRoot } from "./transforms/hoistStatic"
+import { CompilerCompatOptions } from "./compat/compatConfig"
 
 // There are two types of transforms:
 //
@@ -65,7 +65,7 @@ export type DirectiveTransform = (
 export interface DirectiveTransformResult {
   props: Property[]
   needRuntime?: boolean | symbol
-  ssrTagParts?: TemplateLiteral['elements']
+  ssrTagParts?: TemplateLiteral["elements"]
 }
 
 // A structural directive transform is a technically a NodeTransform;
@@ -83,7 +83,7 @@ export interface ImportItem {
 
 export interface TransformContext
   extends Required<
-      Omit<TransformOptions, 'filename' | keyof CompilerCompatOptions>
+      Omit<TransformOptions, "filename" | keyof CompilerCompatOptions>
     >,
     CompilerCompatOptions {
   selfName: string | null
@@ -125,7 +125,7 @@ export interface TransformContext
 export function createTransformContext(
   root: RootNode,
   {
-    filename = '',
+    filename = "",
     prefixIdentifiers = false,
     hoistStatic = false,
     cacheHandlers = false,
@@ -148,7 +148,7 @@ export function createTransformContext(
     compatConfig
   }: TransformOptions
 ): TransformContext {
-  const nameMatch = filename.replace(/\?.*$/, '').match(/([^/\\]+)\.\w+$/)
+  const nameMatch = filename.replace(/\?.*$/, "").match(/([^/\\]+)\.\w+$/)
   const context: TransformContext = {
     // options
     selfName: nameMatch && capitalize(camelize(nameMatch[1])),
@@ -365,7 +365,7 @@ function createRootCodegen(root: RootNode, context: TransformContext) {
     // the rest being comments
     if (
       __DEV__ &&
-      children.filter(c => c.type !== NodeTypes.COMMENT).length === 1
+      children.filter((c) => c.type !== NodeTypes.COMMENT).length === 1
     ) {
       patchFlag |= PatchFlags.DEV_ROOT_FRAGMENT
       patchFlagText += `, ${PatchFlagNames[PatchFlags.DEV_ROOT_FRAGMENT]}`

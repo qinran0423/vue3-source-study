@@ -1,9 +1,9 @@
 import { expect, test } from "vitest"
-import { NodesType } from "./ast"
-import { taverser } from "./taverser"
+import { NodesType, RootNode } from "./ast"
+import { taverser, Visitor } from "./traverser"
 
 test("traverse", () => {
-  const ast = {
+  const ast: RootNode = {
     type: NodesType.Root,
     children: [
       {
@@ -36,29 +36,29 @@ test("traverse", () => {
   }
 
   const callArr: any = []
-  const visitor = {
+  const visitor: Visitor = {
     Root: {
-      enter() {
-        callArr.push("root-enter")
+      enter(node, parent) {
+        callArr.push(["root-enter", node.type, ""])
       },
-      exit() {
-        callArr.push("root-exit")
+      exit(node, parent) {
+        callArr.push(["root-exit", node.type, ""])
       }
     },
     Element: {
-      enter() {
-        callArr.push("element-enter")
+      enter(node, parent) {
+        callArr.push(["element-enter", node.type, parent!.type])
       },
-      exit() {
-        callArr.push("element-exit")
+      exit(node, parent) {
+        callArr.push(["element-exit", node.type, parent!.type])
       }
     },
     Text: {
-      enter() {
-        callArr.push("text-enter")
+      enter(node, parent) {
+        callArr.push(["text-enter", node.type, parent!.type])
       },
-      exit() {
-        callArr.push("text-exit")
+      exit(node, parent) {
+        callArr.push(["text-exit", node.type, parent!.type])
       }
     }
   }
@@ -66,17 +66,17 @@ test("traverse", () => {
   taverser(ast, visitor)
 
   expect(callArr).toEqual([
-    "root-enter",
-    "element-enter",
-    "element-enter",
-    "text-enter",
-    "text-exit",
-    "element-exit",
-    "element-enter",
-    "text-enter",
-    "text-exit",
-    "element-exit",
-    "element-exit",
-    "root-exit"
+    ["root-enter", NodesType.Root, ""],
+    ["element-enter", NodesType.Element, NodesType.Root],
+    ["element-enter", NodesType.Element, NodesType.Element],
+    ["text-enter", NodesType.Text, NodesType.Element],
+    ["text-exit", NodesType.Text, NodesType.Element],
+    ["element-exit", NodesType.Element, NodesType.Element],
+    ["element-enter", NodesType.Element, NodesType.Element],
+    ["text-enter", NodesType.Text, NodesType.Element],
+    ["text-exit", NodesType.Text, NodesType.Element],
+    ["element-exit", NodesType.Element, NodesType.Element],
+    ["element-exit", NodesType.Element, NodesType.Root],
+    ["root-exit", NodesType.Root, ""]
   ])
 })
