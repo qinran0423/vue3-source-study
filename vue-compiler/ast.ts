@@ -7,7 +7,13 @@ export enum TokenType {
 export enum NodesType {
   Root = "Root",
   Element = "Element",
-  Text = "Text"
+  Text = "Text",
+  FunctionDecl = "FunctionDecl",
+  ReturnStatement = "ReturnStatement",
+  CallExpression = "CallExpression",
+  StringLiteral = "StringLiteral",
+  ArrayExpression = "ArrayExpression",
+  Identifier = "Identifier"
 }
 
 export interface TokenTag {

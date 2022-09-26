@@ -5,16 +5,16 @@ type MethodFn = (node: RootNode | ChildNode, parent: ParentNode) => void
 
 interface VisitorOption {
   enter: MethodFn
-  exit: MethodFn
+  exit?: MethodFn
 }
 
 export interface Visitor {
-  Root: VisitorOption
-  Element: VisitorOption
-  Text: VisitorOption
+  Root?: VisitorOption
+  Element?: VisitorOption
+  Text?: VisitorOption
 }
 
-export function taverser(rootNode: RootNode, visitor: Visitor) {
+export function traverser(rootNode: RootNode, visitor: Visitor) {
   function traverseArray(array, parent) {
     array.forEach((node) => {
       traverseNode(node, parent)
@@ -39,7 +39,7 @@ export function taverser(rootNode: RootNode, visitor: Visitor) {
         break
     }
 
-    if (visitorObj) {
+    if (visitorObj && visitorObj.exit) {
       visitorObj.exit(node, parent)
     }
   }

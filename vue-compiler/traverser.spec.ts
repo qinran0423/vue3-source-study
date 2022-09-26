@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 import { NodesType, RootNode } from "./ast"
-import { taverser, Visitor } from "./traverser"
+import { traverser, Visitor } from "./traverser"
 
 test("traverse", () => {
   const ast: RootNode = {
@@ -63,7 +63,7 @@ test("traverse", () => {
     }
   }
 
-  taverser(ast, visitor)
+  traverser(ast, visitor)
 
   expect(callArr).toEqual([
     ["root-enter", NodesType.Root, ""],
